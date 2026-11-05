@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /api/v1/
+Allow: /api/v1/public/sitemap.xml
+
+Sitemap: https://nia.hmx.cl/api/v1/public/sitemap.xml

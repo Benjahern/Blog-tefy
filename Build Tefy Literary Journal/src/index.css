@@ -1,0 +1,86 @@
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Inter:wght@400;500;600&display=swap');
+@import 'tailwindcss';
+@import './styles/prose.css';
+
+:root {
+  --background: #07131c;
+  --background-secondary: #102a38;
+  --surface: #132d3a;
+  --surface-hover: #1c3b49;
+  --forest-green: #233f3a;
+  --petroleum-blue: #1c4554;
+  --mist-blue: #91b8c9;
+  --soft-sage: #a3bdb0;
+  --text-primary: #e1e7df;
+  --text-secondary: #a8b8be;
+  --text-muted: #8198a0;
+  --border: #294450;
+  --accent-warm: #c3b59d;
+  --danger: #d68d8d;
+  --bird-fill: #8fc6d1;
+  --bird-empty: #355361;
+}
+
+@theme {
+  --color-night: var(--background);
+  --color-night-2: var(--background-secondary);
+  --color-surface: var(--surface);
+  --color-surface-hover: var(--surface-hover);
+  --color-forest: var(--forest-green);
+  --color-petrol: var(--petroleum-blue);
+  --color-mist: var(--mist-blue);
+  --color-sage: var(--soft-sage);
+  --color-ink: var(--text-primary);
+  --color-ink-2: var(--text-secondary);
+  --color-ink-3: var(--text-muted);
+  --color-line: var(--border);
+  --color-warm: var(--accent-warm);
+  --color-danger: var(--danger);
+  --font-serif: 'Cormorant Garamond', 'Iowan Old Style', Georgia, serif;
+  --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --animate-enter: enter 420ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+@keyframes enter {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: none; }
+}
+
+@layer base {
+  html {
+    background: var(--background);
+    color-scheme: dark;
+    scroll-behavior: smooth;
+  }
+  body {
+    background: var(--background);
+    color: var(--text-primary);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  ::selection {
+    background: rgba(145, 184, 201, 0.35);
+    color: var(--text-primary);
+  }
+  :focus-visible {
+    outline: 2px solid var(--mist-blue);
+    outline-offset: 3px;
+    border-radius: 6px;
+  }
+  dialog::backdrop {
+    background: rgba(4, 11, 17, 0.72);
+    backdrop-filter: blur(4px);
+  }
+  input, textarea, select { color: var(--text-primary); }
+  ::placeholder { color: var(--text-muted); opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

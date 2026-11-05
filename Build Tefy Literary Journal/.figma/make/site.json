@@ -1,0 +1,9 @@
+{
+  "title": "Nia — reseñas literarias",
+  "language": "es",
+  "description": "Reseñas literarias en español para descubrir libros, géneros e historias que merecen ser leídas.",
+  "accessibility": {
+    "addBypassLinks": false,
+    "ignoreReducedMotion": false
+  }
+}

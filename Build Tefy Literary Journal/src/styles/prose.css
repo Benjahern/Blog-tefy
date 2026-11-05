@@ -1,0 +1,82 @@
+/* Long-form reading typography for reviews (public article + editor). */
+.tefy-prose {
+  --prose-size: 18px;
+  font-size: var(--prose-size);
+  line-height: 1.8;
+  color: var(--text-primary);
+  max-width: 68ch;
+  overflow-wrap: break-word;
+}
+.tefy-prose > * + * { margin-top: 1.15em; }
+.tefy-prose p { text-align: left; }
+.tefy-prose h2 {
+  font-family: var(--font-serif);
+  font-size: 1.75em;
+  line-height: 1.2;
+  font-weight: 600;
+  margin-top: 1.8em;
+  color: var(--text-primary);
+}
+.tefy-prose h3 {
+  font-family: var(--font-serif);
+  font-size: 1.35em;
+  line-height: 1.3;
+  font-weight: 600;
+  margin-top: 1.5em;
+  color: var(--mist-blue);
+}
+.tefy-prose strong, .tefy-prose b { font-weight: 600; color: #eef2ec; }
+.tefy-prose em, .tefy-prose i { font-style: italic; }
+.tefy-prose a { color: var(--mist-blue); text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 1px; }
+.tefy-prose a:hover { color: var(--text-primary); }
+.tefy-prose ul, .tefy-prose ol { padding-left: 1.4em; }
+.tefy-prose ul { list-style: disc; }
+.tefy-prose ol { list-style: decimal; }
+.tefy-prose li + li { margin-top: 0.4em; }
+.tefy-prose li::marker { color: var(--soft-sage); }
+.tefy-prose blockquote {
+  font-family: var(--font-serif);
+  font-size: 1.4em;
+  line-height: 1.45;
+  font-style: italic;
+  color: var(--soft-sage);
+  border-left: 2px solid var(--mist-blue);
+  padding: 0.2em 0 0.2em 1em;
+  margin-top: 1.4em;
+  margin-bottom: 1.4em;
+}
+.tefy-prose figure { margin-top: 1.8em; margin-bottom: 1.8em; }
+.tefy-prose img { border-radius: 12px; width: 100%; height: auto; display: block; }
+.tefy-prose figcaption {
+  font-size: 0.8em;
+  color: var(--text-muted);
+  margin-top: 0.6em;
+  text-align: center;
+  font-style: italic;
+}
+
+/* Editor-only affordances */
+.tefy-editor:focus { outline: none; }
+.tefy-editor:empty::before {
+  content: attr(data-placeholder);
+  color: var(--text-muted);
+  pointer-events: none;
+}
+.tefy-editor [data-spoiler] {
+  border: 1px dashed var(--accent-warm);
+  border-radius: 12px;
+  padding: 0.9em 1em 0.8em;
+  background: rgba(195, 181, 157, 0.06);
+  position: relative;
+}
+.tefy-editor [data-spoiler]::before {
+  content: 'Spoiler oculto para lectores';
+  display: block;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent-warm);
+  margin-bottom: 0.4em;
+}
+.tefy-editor figcaption:empty::before { content: 'Escribe un pie de foto (opcional)'; color: var(--text-muted); }
