@@ -24,6 +24,10 @@ jobs:
           cache: pnpm
           cache-dependency-path: Build Tefy Literary Journal/pnpm-lock.yaml
       - run: pnpm install --frozen-lockfile
+      - name: Test admin session response validation
+        run: node --test tests/admin-session.test.mjs
+      - name: Type-check frontend
+        run: pnpm exec tsc --noEmit
       - run: pnpm build
       - name: Verify generated SEO assets
         run: node scripts/check-seo.mjs
@@ -31,6 +35,18 @@ jobs:
   backend:
     name: Backend tests
     runs-on: ubuntu-latest
+    services:
+      mongo:
+        image: mongo:8.0
+        ports:
+          - 27017:27017
+        options: >-
+          --health-cmd "mongosh --quiet --eval 'db.runCommand({ ping: 1 }).ok'"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      TEST_MONGODB_URI: mongodb://localhost:27017
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
