@@ -1,0 +1,52 @@
+name: Required checks
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  frontend:
+    name: Frontend build and SEO checks
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: Build Tefy Literary Journal
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: Build Tefy Literary Journal/pnpm-lock.yaml
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+      - name: Verify generated SEO assets
+        run: node scripts/check-seo.mjs
+
+  backend:
+    name: Backend tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: backend/go.mod
+          cache-dependency-path: backend/go.sum
+      - name: Test, vet, and build backend
+        working-directory: backend
+        run: go test ./... && go vet ./... && go build ./...
+
+  compose:
+    name: Compose configuration
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate development configuration
+        run: docker compose --env-file .env.example -f compose.yaml config --quiet
+      - name: Validate production configuration
+        run: docker compose --env-file .env.example -f compose.production.yaml config --quiet
