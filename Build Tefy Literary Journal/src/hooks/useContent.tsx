@@ -50,11 +50,17 @@ export function ContentProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let alive = true
-    const load = (admin = false) => contentRepository.load(admin).then((next) => { if (alive) { ref.current = next; setState(next) } }).catch(() => undefined)
+    let requestId = 0
+    const load = (admin = false) => {
+      const currentRequest = ++requestId
+      return contentRepository.load(admin).then((next) => {
+        if (alive && currentRequest === requestId) { ref.current = next; setState(next) }
+      }).catch(() => undefined)
+    }
     void load()
     const onSession = (e: Event) => { const admin = (e as CustomEvent<boolean>).detail; if (!admin) { ref.current = contentRepository.empty(); setState(ref.current) }; void load(admin) }
     window.addEventListener('tefy:session', onSession)
-    return () => { alive = false; window.removeEventListener('tefy:session', onSession) }
+    return () => { alive = false; requestId++; window.removeEventListener('tefy:session', onSession) }
   }, [])
 
   const commit = useCallback((next: ContentState) => {

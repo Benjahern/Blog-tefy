@@ -3,6 +3,12 @@ import { useLocation } from 'react-router'
 import { useContent } from '@/hooks/useContent'
 import { usePublishedReviews } from '@/hooks/useContent'
 
+declare global {
+  interface Window {
+    clarity?: ((...args: unknown[]) => void) & { q?: unknown[][] }
+  }
+}
+
 /** Keeps favicon and meta description in sync with admin settings; resets scroll on navigation. */
 export function SiteHead() {
   const { state } = useContent()
@@ -11,11 +17,31 @@ export function SiteHead() {
   const reviews = usePublishedReviews()
   const review = pathname.startsWith('/resenas/') ? reviews.find((item) => `/resenas/${item.review.slug}` === pathname) : undefined
   const description = review?.review.excerpt || metaDescription
-  const title = review ? `${review.book.title} — reseña | Nia` : pathname === '/' ? 'Nia — reseñas literarias' : `${pathname.split('/').filter(Boolean).at(-1)?.replaceAll('-', ' ') || 'Nia'} | Nia`
+  const title = review ? `${review.book.title} — reseña | Nia` : pathname === '/' ? 'Nia — reseñas literarias' : `${pathname.split('/').filter(Boolean).at(-1)?.split('-').join(' ') || 'Nia'} | Nia`
   const canonical = `https://nia.hmx.cl${pathname}`
   const noIndex = pathname === '/admin' || pathname.startsWith('/admin/')
 
   useEffect(() => { window.scrollTo(0, 0) }, [pathname])
+
+  useEffect(() => {
+    if (pathname === '/admin' || pathname.startsWith('/admin/')) {
+      window.clarity?.('consent', false)
+      return
+    }
+    if (window.clarity) {
+      window.clarity('consent', true)
+      return
+    }
+    const clarity = ((...args: unknown[]) => { clarity.q?.push(args) }) as NonNullable<Window['clarity']>
+    clarity.q = []
+    window.clarity = clarity
+    const script = document.createElement('script')
+    script.id = 'clarity-tag'
+    script.async = true
+    script.src = 'https://www.clarity.ms/tag/z94p2ywzos'
+    document.head.appendChild(script)
+    window.clarity('consent', true)
+  }, [pathname])
 
   useEffect(() => {
     let link = document.querySelector<HTMLLinkElement>('link[rel="icon"]')
