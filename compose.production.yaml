@@ -2,43 +2,57 @@ name: tefy-blog
 
 services:
   frontend:
-    image: ${IMAGE_NAMESPACE:?Set IMAGE_NAMESPACE}/frontend:${IMAGE_TAG:-latest}
+    image: ${IMAGE_REPOSITORY:?Set IMAGE_REPOSITORY}:frontend-${IMAGE_TAG:-latest}
     platform: linux/arm64
     restart: unless-stopped
-    expose:
-      - "8080"
+    environment:
+      API_UPSTREAM: ${API_UPSTREAM:-http://backend:8080}
+      SITE_URL: ${SITE_URL:?Set SITE_URL}
+      CLARITY_ID: ${CLARITY_ID:-}
+    ports:
+      - "127.0.0.1:${PROD_FRONTEND_PORT:-8092}:8080"
+    depends_on:
+      backend:
+        condition: service_healthy
     healthcheck:
       test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:8080/healthz"]
       interval: 30s
       timeout: 5s
       retries: 3
       start_period: 10s
+    security_opt:
+      - no-new-privileges:true
 
   backend:
-    image: ${IMAGE_NAMESPACE:?Set IMAGE_NAMESPACE}/backend:${IMAGE_TAG:-latest}
+    image: ${IMAGE_REPOSITORY:?Set IMAGE_REPOSITORY}:backend-${IMAGE_TAG:-latest}
     platform: linux/arm64
     restart: unless-stopped
     environment:
-      PORT: 8080
+      LISTEN_ADDR: ":8080"
       MONGODB_URI: ${MONGODB_URI:?Set MONGODB_URI}
       MONGO_DATABASE: ${MONGO_DATABASE:-blog}
-      APP_ENV: production
-      COOKIE_SECURE: "true"
+      SITE_URL: ${SITE_URL:?Set SITE_URL}
+      APP_ENV: ${APP_ENV:-production}
+      COOKIE_SECURE: ${COOKIE_SECURE:-true}
       BOOTSTRAP_ADMIN_USERNAME: ${BOOTSTRAP_ADMIN_USERNAME:?Set BOOTSTRAP_ADMIN_USERNAME}
       BOOTSTRAP_ADMIN_PASSWORD: ${BOOTSTRAP_ADMIN_PASSWORD:?Set BOOTSTRAP_ADMIN_PASSWORD}
-    expose:
-      - "8080"
+    ports:
+      - "127.0.0.1:${PROD_BACKEND_PORT:-8091}:8080"
+    depends_on:
+      mongo:
+        condition: service_healthy
     healthcheck:
       test: ["CMD-SHELL", "wget -q --spider http://127.0.0.1:8080/healthz || exit 1"]
       interval: 30s
       timeout: 5s
       retries: 3
       start_period: 15s
+    security_opt:
+      - no-new-privileges:true
 
   mongo:
     image: mongo:8.0
     platform: linux/arm64
-    command: ["mongod", "--replSet", "rs0", "--bind_ip_all"]
     restart: unless-stopped
     environment:
       MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USERNAME:?Set MONGO_ROOT_USERNAME}
@@ -50,13 +64,13 @@ services:
       test:
         - CMD-SHELL
         - >-
-          mongosh --quiet -u "$${MONGO_INITDB_ROOT_USERNAME}" -p "$${MONGO_INITDB_ROOT_PASSWORD}" --authenticationDatabase admin
-          --eval 'try { rs.status().ok ? quit(0) : quit(1) } catch (e) { if (e.codeName === "NotYetInitialized") { rs.initiate({_id:"rs0",members:[{_id:0,host:"mongo:27017"}]}); quit(0) } quit(1) }'
-      interval: 5s
+          mongosh --quiet -u "$${MONGO_INITDB_ROOT_USERNAME}" -p "$${MONGO_INITDB_ROOT_PASSWORD}"
+          --authenticationDatabase admin --eval 'db.adminCommand({ping:1}).ok' | grep -q 1
+      interval: 10s
       timeout: 10s
-      retries: 20
-      start_period: 10s
-    # Intentionally no ports: database is private to the Compose network.
+      retries: 15
+      start_period: 20s
+    # MongoDB is private to the Compose network; it is not published on the host.
 
 volumes:
   mongo_data:

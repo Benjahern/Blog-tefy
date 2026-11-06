@@ -113,17 +113,27 @@ func TestAdminAuthRequiresActiveUserAndCSRFForWrites(t *testing.T) {
 }
 
 func TestSitemapContainsPublishedReviewsOnly(t *testing.T) {
+	t.Setenv("SITE_URL", "https://journal.example")
 	urls := sitemapLocations([]any{
 		map[string]any{"slug": "public-review", "status": "published"},
 		map[string]any{"slug": "private-draft", "status": "draft"},
-	})
-	if len(urls) != 7 || urls[6] != "https://nia.hmx.cl/resenas/public-review" {
+	}, siteBaseURL())
+	if len(urls) != 7 || urls[6] != "https://journal.example/resenas/public-review" {
 		t.Fatalf("unexpected sitemap locations: %#v", urls)
 	}
 	for _, loc := range urls {
 		if strings.Contains(loc, "private-draft") {
 			t.Fatalf("draft leaked into sitemap: %s", loc)
 		}
+	}
+}
+
+func TestRobotsUsesConfiguredSiteURL(t *testing.T) {
+	t.Setenv("SITE_URL", "https://journal.example/")
+	response := httptest.NewRecorder()
+	(&app{}).robotsTxt(response, httptest.NewRequest(http.MethodGet, "/robots.txt", nil))
+	if response.Code != http.StatusOK || !strings.Contains(response.Body.String(), "Sitemap: https://journal.example/api/v1/public/sitemap.xml") {
+		t.Fatalf("robots.txt did not use SITE_URL: %s", response.Body.String())
 	}
 }
 

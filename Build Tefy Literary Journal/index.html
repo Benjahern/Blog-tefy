@@ -6,15 +6,23 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title><!-- figma:title --></title>
     <meta name="description" content="Reseñas literarias en español para descubrir libros, géneros e historias que merecen ser leídas." />
-    <link rel="canonical" href="https://nia.hmx.cl/" />
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="Nia" />
     <meta property="og:title" content="Nia — reseñas literarias" />
     <meta property="og:description" content="Reseñas literarias en español para descubrir libros, géneros e historias que merecen ser leídas." />
-    <meta property="og:url" content="https://nia.hmx.cl/" />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="Nia — reseñas literarias" />
     <meta name="twitter:description" content="Reseñas literarias en español para descubrir libros, géneros e historias que merecen ser leídas." />
+    <script>
+      window.__APP_CONFIG__ = { siteUrl: "${SITE_URL}", clarityId: "${CLARITY_ID}" };
+      const siteRoot = window.__APP_CONFIG__.siteUrl.startsWith('$') ? window.location.origin : window.__APP_CONFIG__.siteUrl.replace(/\/+$/, '');
+      const canonicalLink = document.createElement('link');
+      canonicalLink.rel = 'canonical'; canonicalLink.href = `${siteRoot}/`;
+      document.head.appendChild(canonicalLink);
+      const ogUrl = document.createElement('meta');
+      ogUrl.setAttribute('property', 'og:url'); ogUrl.content = `${siteRoot}/`;
+      document.head.appendChild(ogUrl);
+    </script>
     <!-- figma:head-end -->
   </head>
   <body>

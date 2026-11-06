@@ -16,6 +16,11 @@ COPY . .
 RUN pnpm build
 
 FROM nginx:1.27-alpine AS production
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+ENV API_UPSTREAM=http://backend:8080 \
+    NGINX_ENVSUBST_FILTER=^API_UPSTREAM$
+RUN apk add --no-cache gettext
+COPY nginx.conf /etc/nginx/templates/default.conf.template
+COPY docker-entrypoint/40-runtime-config.sh /docker-entrypoint.d/40-runtime-config.sh
+RUN chmod +x /docker-entrypoint.d/40-runtime-config.sh
 COPY --from=build /app/dist /usr/share/nginx/html
 EXPOSE 8080

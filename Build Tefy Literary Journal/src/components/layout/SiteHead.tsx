@@ -6,6 +6,7 @@ import { usePublishedReviews } from '@/hooks/useContent'
 declare global {
   interface Window {
     clarity?: ((...args: unknown[]) => void) & { q?: unknown[][] }
+    __APP_CONFIG__?: { siteUrl?: string; clarityId?: string }
   }
 }
 
@@ -18,7 +19,11 @@ export function SiteHead() {
   const review = pathname.startsWith('/resenas/') ? reviews.find((item) => `/resenas/${item.review.slug}` === pathname) : undefined
   const description = review?.review.excerpt || metaDescription
   const title = review ? `${review.book.title} — reseña | Nia` : pathname === '/' ? 'Nia — reseñas literarias' : `${pathname.split('/').filter(Boolean).at(-1)?.split('-').join(' ') || 'Nia'} | Nia`
-  const canonical = `https://nia.hmx.cl${pathname}`
+  const configuredSiteUrl = window.__APP_CONFIG__?.siteUrl
+  const siteUrl = (configuredSiteUrl && !configuredSiteUrl.startsWith('$') ? configuredSiteUrl : window.location.origin).replace(/\/+$/, '')
+  const canonical = `${siteUrl}${pathname}`
+  const configuredClarityId = window.__APP_CONFIG__?.clarityId?.trim()
+  const clarityId = configuredClarityId && !configuredClarityId.startsWith('$') ? configuredClarityId : ''
   const noIndex = pathname === '/admin' || pathname.startsWith('/admin/')
 
   useEffect(() => { window.scrollTo(0, 0) }, [pathname])
@@ -28,6 +33,7 @@ export function SiteHead() {
       window.clarity?.('consent', false)
       return
     }
+    if (!clarityId) return
     if (window.clarity) {
       window.clarity('consent', true)
       return
@@ -38,10 +44,10 @@ export function SiteHead() {
     const script = document.createElement('script')
     script.id = 'clarity-tag'
     script.async = true
-    script.src = 'https://www.clarity.ms/tag/z94p2ywzos'
+    script.src = `https://www.clarity.ms/tag/${encodeURIComponent(clarityId)}`
     document.head.appendChild(script)
     window.clarity('consent', true)
-  }, [pathname])
+  }, [clarityId, pathname])
 
   useEffect(() => {
     let link = document.querySelector<HTMLLinkElement>('link[rel="icon"]')

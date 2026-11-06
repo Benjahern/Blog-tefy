@@ -70,6 +70,7 @@ func main() {
 	mux.HandleFunc("GET /healthz", func(w http.ResponseWriter, _ *http.Request) { jsonResponse(w, 200, map[string]string{"status": "ok"}) })
 	mux.HandleFunc("GET /api/v1/public/content", a.publicContent)
 	mux.HandleFunc("GET /api/v1/public/sitemap.xml", a.publicSitemap)
+	mux.HandleFunc("GET /robots.txt", a.robotsTxt)
 	mux.HandleFunc("GET /api/v1/auth/csrf", a.csrf)
 	mux.HandleFunc("POST /api/v1/auth/login", a.login)
 	mux.HandleFunc("POST /api/v1/auth/logout", a.logout)
@@ -267,7 +268,7 @@ func (a *app) publicSitemap(w http.ResponseWriter, r *http.Request) {
 		fail(w, 500, "server_error", "No se pudo generar el sitemap")
 		return
 	}
-	urls := sitemapLocations(doc.Reviews)
+	urls := sitemapLocations(doc.Reviews, siteBaseURL())
 	type urlEntry struct {
 		Loc string `xml:"loc"`
 	}
@@ -287,8 +288,24 @@ func (a *app) publicSitemap(w http.ResponseWriter, r *http.Request) {
 	_ = xml.NewEncoder(w).Encode(urlSet{Xmlns: "http://www.sitemaps.org/schemas/sitemap/0.9", URLs: entries})
 }
 
-func sitemapLocations(reviews []any) []string {
-	urls := []string{"https://nia.hmx.cl/", "https://nia.hmx.cl/resenas", "https://nia.hmx.cl/generos", "https://nia.hmx.cl/colecciones", "https://nia.hmx.cl/sobre-nia", "https://nia.hmx.cl/privacidad"}
+func (a *app) robotsTxt(w http.ResponseWriter, _ *http.Request) {
+	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+	w.Header().Set("Cache-Control", "public, max-age=300")
+	_, _ = fmt.Fprintf(w, "User-agent: *\nAllow: /\nDisallow: /admin/\nDisallow: /api/v1/\nAllow: /api/v1/public/sitemap.xml\n\nSitemap: %s/api/v1/public/sitemap.xml\n", siteBaseURL())
+}
+
+func siteBaseURL() string {
+	configured := strings.TrimRight(strings.TrimSpace(env("SITE_URL", "http://localhost:8443")), "/")
+	parsed, err := url.Parse(configured)
+	if err != nil || (parsed.Scheme != "http" && parsed.Scheme != "https") || parsed.Host == "" {
+		return "http://localhost:8443"
+	}
+	return configured
+}
+
+func sitemapLocations(reviews []any, siteURL string) []string {
+	siteURL = strings.TrimRight(siteURL, "/")
+	urls := []string{siteURL + "/", siteURL + "/resenas", siteURL + "/generos", siteURL + "/colecciones", siteURL + "/sobre-nia", siteURL + "/privacidad"}
 	for _, raw := range reviews {
 		item := asMap(raw)
 		if item["status"] != "published" {
@@ -296,7 +313,7 @@ func sitemapLocations(reviews []any) []string {
 		}
 		slug, ok := item["slug"].(string)
 		if ok && strings.TrimSpace(slug) != "" {
-			urls = append(urls, "https://nia.hmx.cl/resenas/"+url.PathEscape(slug))
+			urls = append(urls, siteURL+"/resenas/"+url.PathEscape(slug))
 		}
 	}
 	return urls
