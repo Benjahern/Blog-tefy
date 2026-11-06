@@ -1,0 +1,35 @@
+services:
+  frontend:
+    platform: linux/amd64
+    build:
+      context: ./Build Tefy Literary Journal
+      dockerfile: Dockerfile
+      target: production
+
+  backend:
+    platform: linux/amd64
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: production
+      args:
+        TARGETOS: linux
+        TARGETARCH: amd64
+    environment:
+      APP_ENV: test
+      COOKIE_SECURE: "false"
+
+  mongo:
+    image: mongo:7.0
+    platform: linux/amd64
+    command: ["mongod", "--bind_ip_all"]
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - >-
+          mongosh --quiet -u "$${MONGO_INITDB_ROOT_USERNAME}" -p "$${MONGO_INITDB_ROOT_PASSWORD}"
+          --authenticationDatabase admin --eval 'db.adminCommand({ping:1}).ok' | grep -q 1
+      interval: 5s
+      timeout: 10s
+      retries: 20
+      start_period: 10s

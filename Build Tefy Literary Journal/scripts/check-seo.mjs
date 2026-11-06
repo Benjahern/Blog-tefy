@@ -3,17 +3,16 @@ import { join } from 'node:path'
 
 const dist = join(process.cwd(), 'dist')
 const html = readFileSync(join(dist, 'index.html'), 'utf8')
-const robots = readFileSync(join(dist, 'robots.txt'), 'utf8')
+const nginx = readFileSync(join(process.cwd(), 'nginx.conf'), 'utf8')
 const checks = [
   [/<html lang="es">/.test(html), 'document language must be Spanish'],
   [html.includes('name="description"'), 'description meta is required'],
-  [html.includes('rel="canonical" href="https://nia.hmx.cl/"'), 'canonical homepage URL is required'],
+  [html.includes("canonicalLink.rel = 'canonical'"), 'canonical URL must be generated at runtime'],
   [html.includes('property="og:title"'), 'Open Graph title is required'],
   [(html.match(/name="description"/g) ?? []).length === 1, 'description meta must not be duplicated'],
-  [robots.includes('Allow: /'), 'robots must allow public pages'],
-  [robots.includes('Disallow: /admin/'), 'robots must exclude admin'],
-  [robots.includes('Disallow: /api/v1/') && robots.includes('Allow: /api/v1/public/sitemap.xml'), 'robots must exclude API routes and allow sitemap'],
-  [robots.includes('https://nia.hmx.cl/api/v1/public/sitemap.xml'), 'robots must declare sitemap URL'],
+  [html.includes('siteUrl: "${SITE_URL}"') && html.includes('clarityId: "${CLARITY_ID}"'), 'site URL and analytics ID must be runtime environment values'],
+  [/location\s+\^~\s+\/api\/v1\//.test(nginx) && nginx.includes('proxy_pass ${API_UPSTREAM};'), 'API requests must proxy to the configured backend'],
+  [/location\s*=\s*\/robots\.txt/.test(nginx) && nginx.includes('proxy_pass ${API_UPSTREAM}/robots.txt;'), 'robots.txt must use the backend route'],
 ]
 const failed = checks.filter(([passed]) => !passed)
 if (failed.length) {
