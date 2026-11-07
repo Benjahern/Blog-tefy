@@ -1,6 +1,7 @@
 import { createElement, useMemo, type ReactNode } from 'react'
 import { sanitizeHtml } from '@/lib/html'
 import { SpoilerBlock } from './SpoilerBlock'
+import { isReviewFontId } from '@/lib/reviewFonts'
 
 const TAGS = new Set(['p', 'strong', 'em', 'u', 'h2', 'h3', 'ul', 'ol', 'li', 'blockquote', 'figure', 'figcaption', 'br'])
 
@@ -16,6 +17,10 @@ function toReact(node: Node, key: string): ReactNode {
     const href = el.getAttribute('href') ?? '#'
     const external = /^https?:/.test(href)
     return <a key={key} href={href} {...(external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}>{kids}</a>
+  }
+  if (tag === 'span') {
+    const font = el.getAttribute('data-font')
+    return <span key={key} {...(font && isReviewFontId(font) && font !== 'default' ? { 'data-font': font } : {})}>{kids}</span>
   }
   if (TAGS.has(tag)) return createElement(tag, { key }, tag === 'br' ? undefined : kids)
   return <span key={key}>{kids}</span>

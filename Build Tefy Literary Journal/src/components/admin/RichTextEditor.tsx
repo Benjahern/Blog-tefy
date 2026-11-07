@@ -4,6 +4,7 @@ import { fileToCompressedDataUrl, ImageError } from '@/lib/images'
 import { Dialog } from '@/components/ui/Dialog'
 import { Button } from '@/components/ui/Button'
 import { TextField } from '@/components/ui/Field'
+import { REVIEW_FONTS, reviewFontIdFromFace, type ReviewFontId } from '@/lib/reviewFonts'
 
 type Props = { value: string; onChange: (html: string) => void; resetKey?: string; labelledBy?: string; onError?: (msg: string) => void }
 
@@ -22,6 +23,7 @@ export function RichTextEditor({ value, onChange, resetKey, labelledBy, onError 
   const [linkOpen, setLinkOpen] = useState(false)
   const [linkUrl, setLinkUrl] = useState('')
   const [uploading, setUploading] = useState(false)
+  const [font, setFont] = useState<ReviewFontId>('default')
 
   // Load external content only on mount / when switching documents, to keep the caret stable.
   useEffect(() => {
@@ -46,6 +48,8 @@ export function RichTextEditor({ value, onChange, resetKey, labelledBy, onError 
       block: String(document.queryCommandValue('formatBlock') || 'p').toLowerCase().replace(/[<>]/g, ''),
       spoiler: !!el?.closest('[data-spoiler]'),
     })
+    const fontEl = el?.closest('[data-font], font[face]')
+    setFont(fontEl ? (fontEl.hasAttribute('data-font') ? (fontEl.getAttribute('data-font') as ReviewFontId) : reviewFontIdFromFace(fontEl.getAttribute('face') ?? '')) : 'default')
   }, [])
 
   useEffect(() => {
@@ -78,6 +82,16 @@ export function RichTextEditor({ value, onChange, resetKey, labelledBy, onError 
     refresh()
   }
   const block = (tag: string) => exec('formatBlock', active.block === tag ? 'p' : tag)
+
+  const applyFont = (id: ReviewFontId) => {
+    restoreSelection()
+    const choice = REVIEW_FONTS.find((item) => item.id === id)!
+    const family = id === 'default' ? 'inherit' : choice.label
+    document.execCommand('fontName', false, family)
+    emit()
+    setFont(id)
+    refresh()
+  }
 
   const toggleSpoiler = () => {
     const sel = window.getSelection()
@@ -147,6 +161,11 @@ export function RichTextEditor({ value, onChange, resetKey, labelledBy, onError 
   return (
     <div className="rounded-2xl border border-line bg-night/50 focus-within:border-[#3d6475]">
       <div role="toolbar" aria-label="Formato del texto" className="sticky top-16 z-10 flex flex-wrap items-center gap-0.5 rounded-t-2xl border-b border-line bg-night-2/95 p-1.5 backdrop-blur lg:top-0">
+        <label className="sr-only" htmlFor="review-font">Tipo de letra</label>
+        <select id="review-font" aria-label="Tipo de letra" value={font} onMouseDown={saveSelection} onChange={(e) => applyFont(e.target.value as ReviewFontId)} className="mx-1 h-9 max-w-48 rounded-lg border border-line bg-night px-2 text-sm text-ink">
+          {REVIEW_FONTS.map((item) => <option key={item.id} value={item.id}>{item.label}</option>)}
+        </select>
+        <span className="mx-1 h-6 w-px bg-line" aria-hidden="true" />
         {tools.map((t, i) =>
           'sep' in t ? (
             <span key={i} className="mx-1 h-6 w-px bg-line" aria-hidden="true" />

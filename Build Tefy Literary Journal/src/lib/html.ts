@@ -1,5 +1,7 @@
+import { isReviewFontId, reviewFontIdFromFace } from './reviewFonts'
+
 /** Small allowlist sanitizer for review HTML. Runs in the browser via DOMParser. */
-const ALLOWED = new Set(['P', 'BR', 'STRONG', 'B', 'EM', 'I', 'U', 'H2', 'H3', 'UL', 'OL', 'LI', 'BLOCKQUOTE', 'A', 'IMG', 'FIGURE', 'FIGCAPTION', 'DIV'])
+const ALLOWED = new Set(['P', 'BR', 'STRONG', 'B', 'EM', 'I', 'U', 'H2', 'H3', 'UL', 'OL', 'LI', 'BLOCKQUOTE', 'A', 'IMG', 'FIGURE', 'FIGCAPTION', 'DIV', 'SPAN', 'FONT'])
 const DROP = new Set(['SCRIPT', 'STYLE', 'IFRAME', 'OBJECT', 'EMBED', 'LINK', 'META', 'svg', 'SVG'])
 
 const safeUrl = (url: string, forImage = false) => {
@@ -16,7 +18,7 @@ function clean(node: Node, doc: Document): Node[] {
   if (DROP.has(tag)) return []
   const children = Array.from(el.childNodes).flatMap((c) => clean(c, doc))
   // Normalise legacy tags from contentEditable.
-  const mapped = tag === 'B' ? 'STRONG' : tag === 'I' ? 'EM' : tag === 'H1' ? 'H2' : tag === 'H4' || tag === 'H5' || tag === 'H6' ? 'H3' : tag
+  const mapped = tag === 'B' ? 'STRONG' : tag === 'I' ? 'EM' : tag === 'H1' ? 'H2' : tag === 'H4' || tag === 'H5' || tag === 'H6' ? 'H3' : tag === 'FONT' ? 'SPAN' : tag
   if (!ALLOWED.has(mapped)) return children
   if (mapped === 'DIV' && !el.hasAttribute('data-spoiler')) {
     const p = doc.createElement('p')
@@ -24,6 +26,11 @@ function clean(node: Node, doc: Document): Node[] {
     return [p]
   }
   const out = doc.createElement(mapped.toLowerCase())
+  if (mapped === 'SPAN') {
+    const fontId = tag === 'FONT' ? reviewFontIdFromFace(el.getAttribute('face') ?? '') : el.getAttribute('data-font') ?? ''
+    if (isReviewFontId(fontId) && fontId !== 'default') out.setAttribute('data-font', fontId)
+    else return children
+  }
   if (mapped === 'A') {
     const href = safeUrl(el.getAttribute('href') ?? '')
     if (!href) return children
