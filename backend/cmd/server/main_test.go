@@ -26,6 +26,18 @@ func TestPublishedOnlyDoesNotExposeDrafts(t *testing.T) {
 	}
 }
 
+func TestReviewContentPolicyAllowsOnlyKnownFontFamilies(t *testing.T) {
+	policy := reviewContentPolicy()
+	valid := policy.Sanitize(`<p><span data-font="times-new-roman">classic</span></p>`)
+	if !strings.Contains(valid, `data-font="times-new-roman"`) {
+		t.Fatalf("expected recognized font to survive sanitization, got %q", valid)
+	}
+	unsafe := policy.Sanitize(`<p><span data-font="evil" style="color:red" onclick="alert(1)">text</span></p>`)
+	if strings.Contains(unsafe, "data-font") || strings.Contains(unsafe, "style=") || strings.Contains(unsafe, "onclick") {
+		t.Fatalf("unsafe font attributes survived sanitization: %q", unsafe)
+	}
+}
+
 func testApp(t *testing.T) *app {
 	t.Helper()
 	uri := os.Getenv("TEST_MONGODB_URI")

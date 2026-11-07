@@ -15,6 +15,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"regexp"
 	"strings"
 	"time"
 
@@ -408,7 +409,7 @@ func (a *app) saveContent(w http.ResponseWriter, r *http.Request) {
 		fail(w, 413, "too_large", "Contenido demasiado grande")
 		return
 	}
-	policy := bluemonday.UGCPolicy().AllowElements("div", "figure", "figcaption").AllowAttrs("data-spoiler").OnElements("div").AllowAttrs("src", "alt").OnElements("img")
+	policy := reviewContentPolicy()
 	for _, x := range doc.Reviews {
 		if m, ok := x.(map[string]any); ok {
 			if m["status"] != "draft" && m["status"] != "published" {
@@ -431,6 +432,14 @@ func (a *app) saveContent(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.WriteHeader(http.StatusNoContent)
+}
+
+func reviewContentPolicy() *bluemonday.Policy {
+	return bluemonday.UGCPolicy().
+		AllowElements("div", "figure", "figcaption", "span").
+		AllowAttrs("data-spoiler").OnElements("div").
+		AllowAttrs("src", "alt").OnElements("img").
+		AllowAttrs("data-font").Matching(regexp.MustCompile(`^(times-new-roman|arial|georgia|verdana|tahoma|trebuchet-ms|courier-new|palatino|garamond|inter|cormorant-garamond)$`)).OnElements("span")
 }
 func (a *app) getWorkingCopy(w http.ResponseWriter, r *http.Request) {
 	var doc bson.M

@@ -9,6 +9,17 @@
 }
 .tefy-prose > * + * { margin-top: 1.15em; }
 .tefy-prose p { text-align: left; }
+.tefy-prose [data-font="times-new-roman"] { font-family: "Times New Roman", Times, serif; }
+.tefy-prose [data-font="arial"] { font-family: Arial, Helvetica, sans-serif; }
+.tefy-prose [data-font="georgia"] { font-family: Georgia, serif; }
+.tefy-prose [data-font="verdana"] { font-family: Verdana, sans-serif; }
+.tefy-prose [data-font="tahoma"] { font-family: Tahoma, sans-serif; }
+.tefy-prose [data-font="trebuchet-ms"] { font-family: "Trebuchet MS", sans-serif; }
+.tefy-prose [data-font="courier-new"] { font-family: "Courier New", monospace; }
+.tefy-prose [data-font="palatino"] { font-family: Palatino, "Book Antiqua", serif; }
+.tefy-prose [data-font="garamond"] { font-family: Garamond, serif; }
+.tefy-prose [data-font="inter"] { font-family: Inter, sans-serif; }
+.tefy-prose [data-font="cormorant-garamond"] { font-family: "Cormorant Garamond", serif; }
 .tefy-prose h2 {
   font-family: var(--font-serif);
   font-size: 1.75em;
