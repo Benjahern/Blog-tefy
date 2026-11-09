@@ -1,4 +1,5 @@
 import type { Book } from '@/types'
+import { reviewFontFamily } from '@/lib/reviewFonts'
 
 const PALETTES = [
   ['#1c4554', '#0d2230', '#91b8c9'],
@@ -11,7 +12,7 @@ const PALETTES = [
 
 const hash = (s: string) => Array.from(s).reduce((h, c) => (h * 31 + c.charCodeAt(0)) >>> 0, 7)
 
-type Props = { book: Pick<Book, 'title' | 'author' | 'coverUrl'>; className?: string; size?: 'xs' | 'sm' | 'md' | 'lg'; eager?: boolean }
+type Props = { book: Pick<Book, 'title' | 'author' | 'coverUrl' | 'titleFont' | 'authorFont'>; className?: string; size?: 'xs' | 'sm' | 'md' | 'lg'; eager?: boolean }
 
 /**
  * Shows the uploaded cover, or a designed typographic cover so no copyrighted artwork is invented.
@@ -37,8 +38,8 @@ export function BookCover({ book, className = '', size = 'md', eager = false }: 
         <circle cx="74" cy="32" r="8" fill={ink} opacity="0.55" />
       </svg>
       <div className="absolute inset-[7%] flex flex-col justify-between border border-white/10 p-[8%]" style={{ color: ink }}>
-        <span className={`font-serif font-semibold leading-[1.05] ${titleSize}`}>{book.title}</span>
-        <span className={`font-sans uppercase tracking-[0.18em] opacity-80 ${authorSize}`}>{book.author}</span>
+        <span style={{ fontFamily: reviewFontFamily(book.titleFont) }} className={`font-semibold leading-[1.05] ${titleSize}`}>{book.title}</span>
+        <span style={{ fontFamily: reviewFontFamily(book.authorFont) }} className={`uppercase tracking-[0.18em] opacity-80 ${authorSize}`}>{book.author}</span>
       </div>
       <span className="pointer-events-none absolute inset-y-0 left-0 w-[6%] bg-gradient-to-r from-black/40 to-transparent" />
     </div>

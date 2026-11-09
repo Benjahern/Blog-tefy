@@ -22,10 +22,18 @@ function clean(node: Node, doc: Document): Node[] {
   if (!ALLOWED.has(mapped)) return children
   if (mapped === 'DIV' && !el.hasAttribute('data-spoiler')) {
     const p = doc.createElement('p')
+    const rawAlign = (el.getAttribute('data-align') ?? el.getAttribute('align') ?? (el as HTMLElement).style?.textAlign ?? '').toLowerCase()
+    const align = ({ left: 'left', center: 'center', right: 'right', justify: 'justify' } as Record<string, string>)[rawAlign]
+    if (align) p.setAttribute('data-align', align)
     children.forEach((c) => p.appendChild(c))
     return [p]
   }
   const out = doc.createElement(mapped.toLowerCase())
+  if (['P', 'H2', 'H3', 'BLOCKQUOTE', 'LI'].includes(mapped)) {
+    const rawAlign = (el.getAttribute('data-align') ?? el.getAttribute('align') ?? (el as HTMLElement).style?.textAlign ?? '').toLowerCase()
+    const align = ({ left: 'left', center: 'center', right: 'right', justify: 'justify' } as Record<string, string>)[rawAlign]
+    if (align) out.setAttribute('data-align', align)
+  }
   if (mapped === 'SPAN') {
     const fontId = tag === 'FONT' ? reviewFontIdFromFace(el.getAttribute('face') ?? '') : el.getAttribute('data-font') ?? ''
     if (isReviewFontId(fontId) && fontId !== 'default') out.setAttribute('data-font', fontId)

@@ -12,10 +12,12 @@ import { BookCover } from '@/components/books/BookCover'
 import { RatingEditor } from '@/components/rating/RatingEditor'
 import { HummingbirdRating } from '@/components/rating/HummingbirdRating'
 import { RichTextEditor } from '@/components/admin/RichTextEditor'
+import { ReviewFontSelect } from '@/components/admin/ReviewFontSelect'
 import { SaveIndicator, type SaveState } from '@/components/admin/SaveIndicator'
 import { ReviewArticle } from '@/components/reviews/ReviewArticle'
 import { ReviewCard } from '@/components/reviews/ReviewCard'
 import { autoExcerpt, hasText } from '@/lib/html'
+import { reviewFontFamily } from '@/lib/reviewFonts'
 import { defaultImages } from '@/data/images'
 import { NotFoundPage } from '@/pages/public/NotFoundPage'
 
@@ -28,8 +30,10 @@ const blank = (): ReviewDraftInput => ({ bookTitle: '', author: '', primaryGenre
 function fromExisting(review: Review, book: Book): ReviewDraftInput {
   return {
     reviewId: review.id, bookId: book.id, bookTitle: book.title, author: book.author, coverUrl: book.coverUrl,
+    bookTitleFont: book.titleFont, authorFont: book.authorFont, synopsisFont: book.synopsisFont,
     primaryGenreId: book.genreIds[0] ?? '', extraGenreIds: book.genreIds.slice(1), seriesId: book.seriesId, seriesOrder: book.seriesOrder,
     synopsis: book.synopsis ?? '', rating: review.rating, reviewTitle: review.title ?? '', content: review.content, excerpt: review.excerpt, closingThought: review.closingThought ?? '',
+    reviewTitleFont: review.titleFont, excerptFont: review.excerptFont, closingThoughtFont: review.closingThoughtFont,
   }
 }
 
@@ -176,8 +180,8 @@ function Wizard({ initial, initialId }: { initial: ReviewDraftInput; initialId?:
   const previewView: ReviewView = useMemo(() => {
     const genreIds = [form.primaryGenreId, ...form.extraGenreIds.filter((g) => g !== form.primaryGenreId)].filter(Boolean)
     const now = new Date().toISOString()
-    const b: Book = { id: form.bookId ?? 'preview', title: form.bookTitle || 'Título del libro', author: form.author || 'Autor', coverUrl: form.coverUrl, synopsis: form.synopsis || undefined, genreIds, seriesId: form.seriesId, seriesOrder: form.seriesOrder }
-    const r: Review = { id: reviewId ?? 'preview', bookId: b.id, slug: current?.slug ?? 'vista-previa', title: form.reviewTitle || undefined, excerpt: form.excerpt || autoExcerpt(form.content), content: form.content, closingThought: form.closingThought || undefined, rating: form.rating, status: 'published', featured: false, createdAt: now, updatedAt: now, publishedAt: current?.publishedAt ?? now }
+    const b: Book = { id: form.bookId ?? 'preview', title: form.bookTitle || 'Título del libro', author: form.author || 'Autor', titleFont: form.bookTitleFont, authorFont: form.authorFont, synopsisFont: form.synopsisFont, coverUrl: form.coverUrl, synopsis: form.synopsis || undefined, genreIds, seriesId: form.seriesId, seriesOrder: form.seriesOrder }
+    const r: Review = { id: reviewId ?? 'preview', bookId: b.id, slug: current?.slug ?? 'vista-previa', title: form.reviewTitle || undefined, titleFont: form.reviewTitleFont, excerptFont: form.excerptFont, closingThoughtFont: form.closingThoughtFont, excerpt: form.excerpt || autoExcerpt(form.content), content: form.content, closingThought: form.closingThought || undefined, rating: form.rating, status: 'published', featured: false, createdAt: now, updatedAt: now, publishedAt: current?.publishedAt ?? now }
     return { review: r, book: b, genres: genreIds.map((g) => state.genres.find((x) => x.id === g)!).filter(Boolean), series: state.series.find((s) => s.id === form.seriesId) }
   }, [form, state.genres, state.series, reviewId, current])
 
@@ -241,13 +245,13 @@ function Wizard({ initial, initialId }: { initial: ReviewDraftInput; initialId?:
               <SelectField label="¿Ya reseñaste otro libro de este título?" optional value={form.bookId ?? ''} hint="Elige un libro ya registrado para no duplicarlo, o déjalo como libro nuevo." onChange={(e) => {
                 const b = state.books.find((x) => x.id === e.target.value)
                 if (!b) patch({ bookId: undefined })
-                else patch({ bookId: b.id, bookTitle: b.title, author: b.author, coverUrl: b.coverUrl, primaryGenreId: b.genreIds[0] ?? '', extraGenreIds: b.genreIds.slice(1), seriesId: b.seriesId, seriesOrder: b.seriesOrder, synopsis: b.synopsis ?? '' })
+                 else patch({ bookId: b.id, bookTitle: b.title, author: b.author, bookTitleFont: b.titleFont, authorFont: b.authorFont, synopsisFont: b.synopsisFont, coverUrl: b.coverUrl, primaryGenreId: b.genreIds[0] ?? '', extraGenreIds: b.genreIds.slice(1), seriesId: b.seriesId, seriesOrder: b.seriesOrder, synopsis: b.synopsis ?? '' })
               }}>
                 <option value="">Es un libro nuevo</option>
                 {[...state.books].sort((a, b) => a.title.localeCompare(b.title, 'es')).map((b) => <option key={b.id} value={b.id}>{b.title} — {b.author}</option>)}
               </SelectField>
-              <TextField label="Título del libro" required value={form.bookTitle} error={errors.bookTitle} onChange={(e) => patch({ bookTitle: e.target.value })} placeholder="Por ejemplo: Dune" />
-              <TextField label="Autor o autora" required value={form.author} error={errors.author} onChange={(e) => patch({ author: e.target.value })} placeholder="Por ejemplo: Frank Herbert" />
+              <div><TextField label="Título del libro" required value={form.bookTitle} error={errors.bookTitle} style={{ fontFamily: reviewFontFamily(form.bookTitleFont) }} onChange={(e) => patch({ bookTitle: e.target.value })} placeholder="Por ejemplo: Dune" /><ReviewFontSelect label="título del libro" value={form.bookTitleFont} onChange={(bookTitleFont) => patch({ bookTitleFont })} /></div>
+              <div><TextField label="Autor o autora" required value={form.author} error={errors.author} style={{ fontFamily: reviewFontFamily(form.authorFont) }} onChange={(e) => patch({ author: e.target.value })} placeholder="Por ejemplo: Frank Herbert" /><ReviewFontSelect label="autor" value={form.authorFont} onChange={(authorFont) => patch({ authorFont })} /></div>
               <SelectField label="Género principal" required value={form.primaryGenreId} error={errors.primaryGenreId} onChange={(e) => patch({ primaryGenreId: e.target.value, extraGenreIds: form.extraGenreIds.filter((g) => g !== e.target.value) })}>
                 <option value="">Elige un género…</option>
                 {genres.map((g) => <option key={g.id} value={g.id}>{g.name}</option>)}
@@ -280,7 +284,7 @@ function Wizard({ initial, initialId }: { initial: ReviewDraftInput; initialId?:
                   if (sid) { patch({ seriesId: sid }); setNewSeries(''); toast('Saga creada y seleccionada.') }
                 }}><Plus size={16} /> Crear</Button>
               </div>
-              <TextArea label="Sinopsis del libro" optional value={form.synopsis} onChange={(e) => patch({ synopsis: e.target.value })} placeholder="Unas líneas sobre de qué trata el libro, sin spoilers." />
+              <div><TextArea label="Sinopsis del libro" optional value={form.synopsis} style={{ fontFamily: reviewFontFamily(form.synopsisFont) }} onChange={(e) => patch({ synopsis: e.target.value })} placeholder="Unas líneas sobre de qué trata el libro, sin spoilers." /><ReviewFontSelect label="sinopsis" value={form.synopsisFont} onChange={(synopsisFont) => patch({ synopsisFont })} /></div>
             </div>
           </div>
         )}
@@ -311,7 +315,7 @@ function Wizard({ initial, initialId }: { initial: ReviewDraftInput; initialId?:
               </ul>
               <p className="px-5 pb-5 text-[13px] text-ink-3">Son solo sugerencias. Puedes escribir libremente, como una carta o un ensayo.</p>
             </details>
-            <TextField label="Título de tu reseña" optional value={form.reviewTitle} onChange={(e) => patch({ reviewTitle: e.target.value })} placeholder="Por ejemplo: La arena también recuerda" />
+            <div><TextField label="Título de tu reseña" optional value={form.reviewTitle} style={{ fontFamily: reviewFontFamily(form.reviewTitleFont) }} onChange={(e) => patch({ reviewTitle: e.target.value })} placeholder="Por ejemplo: La arena también recuerda" /><ReviewFontSelect label="título de la reseña" value={form.reviewTitleFont} onChange={(reviewTitleFont) => patch({ reviewTitleFont })} /></div>
             <div>
               <p id={editorLabel} className="mb-1.5 flex items-baseline gap-2 text-sm font-medium text-ink">Tu reseña <span className="text-xs font-normal text-warm">obligatorio</span></p>
               <RichTextEditor value={form.content} onChange={(html) => patch({ content: html })} resetKey={reviewId ?? 'new'} labelledBy={editorLabel} onError={(m) => toast(m, 'error')} />
@@ -319,8 +323,8 @@ function Wizard({ initial, initialId }: { initial: ReviewDraftInput; initialId?:
               <p className="mt-2 text-[13px] text-ink-3">Selecciona texto y pulsa “Spoiler” para ocultarlo a quienes no han leído el libro. Puedes agregar varias imágenes con el botón de imagen.</p>
             </div>
             <div className="grid gap-6 md:grid-cols-2">
-              <TextArea label="Resumen corto para las tarjetas" optional value={form.excerpt} onChange={(e) => patch({ excerpt: e.target.value })} maxLength={240} placeholder={autoExcerpt(form.content) || 'Si lo dejas vacío, usaremos el comienzo de tu reseña (sin spoilers).'} hint={`${form.excerpt.length}/240 caracteres`} />
-              <TextArea label="Pensamiento final" optional value={form.closingThought} onChange={(e) => patch({ closingThought: e.target.value })} placeholder="Una frase para cerrar, junto a tu calificación final." />
+              <div><TextArea label="Resumen corto para las tarjetas" optional value={form.excerpt} style={{ fontFamily: reviewFontFamily(form.excerptFont) }} onChange={(e) => patch({ excerpt: e.target.value })} maxLength={240} placeholder={autoExcerpt(form.content) || 'Si lo dejas vacío, usaremos el comienzo de tu reseña (sin spoilers).'} hint={`${form.excerpt.length}/240 caracteres`} /><ReviewFontSelect label="resumen corto" value={form.excerptFont} onChange={(excerptFont) => patch({ excerptFont })} /></div>
+              <div><TextArea label="Pensamiento final" optional value={form.closingThought} style={{ fontFamily: reviewFontFamily(form.closingThoughtFont) }} onChange={(e) => patch({ closingThought: e.target.value })} placeholder="Una frase para cerrar, junto a tu calificación final." /><ReviewFontSelect label="pensamiento final" value={form.closingThoughtFont} onChange={(closingThoughtFont) => patch({ closingThoughtFont })} /></div>
             </div>
           </div>
         )}

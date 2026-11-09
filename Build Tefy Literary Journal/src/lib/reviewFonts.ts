@@ -15,6 +15,7 @@ export const REVIEW_FONTS = [
 
 export type ReviewFontId = (typeof REVIEW_FONTS)[number]['id']
 export const isReviewFontId = (value: string): value is ReviewFontId => REVIEW_FONTS.some((font) => font.id === value)
+export const reviewFontFamily = (id?: string) => REVIEW_FONTS.find((font) => font.id === id)?.family ?? 'inherit'
 
 export function reviewFontIdFromFace(face: string): ReviewFontId {
   const normalized = face.replace(/["']/g, '').split(',')[0].trim().toLowerCase()

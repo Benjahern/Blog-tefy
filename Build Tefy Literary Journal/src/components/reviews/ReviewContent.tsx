@@ -22,7 +22,10 @@ function toReact(node: Node, key: string): ReactNode {
     const font = el.getAttribute('data-font')
     return <span key={key} {...(font && isReviewFontId(font) && font !== 'default' ? { 'data-font': font } : {})}>{kids}</span>
   }
-  if (TAGS.has(tag)) return createElement(tag, { key }, tag === 'br' ? undefined : kids)
+  if (TAGS.has(tag)) {
+    const align = el.getAttribute('data-align')
+    return createElement(tag, { key, ...(align ? { 'data-align': align } : {}) }, tag === 'br' ? undefined : kids)
+  }
   return <span key={key}>{kids}</span>
 }
 
