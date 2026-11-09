@@ -70,7 +70,7 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         with:
           args: >-
-            -Dsonar.projectKey=Blog-tefy
+            -Dsonar.projectKey=blog-tefy
             -Dsonar.sources=.
             -Dsonar.exclusions=**/node_modules/**,**/dist/**,**/coverage/**,**/vendor/**,**/.git/**
 
