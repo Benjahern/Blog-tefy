@@ -15,6 +15,8 @@ export type Review = {
   id: string
   bookId: string
   slug: string
+  /** Previous public URLs kept as aliases after a slug change. */
+  previousSlugs?: string[]
   /** Optional editorial headline for the review. */
   title?: string
   excerpt: string

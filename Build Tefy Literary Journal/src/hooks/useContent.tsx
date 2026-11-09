@@ -111,8 +111,12 @@ export function ContentProvider({ children }: { children: ReactNode }) {
     let id: string
     if (existing) {
       id = existing.id
+      const nextSlug = bookPatch.title ? uniqueSlug(bookPatch.title, cur.reviews.filter((r) => r.id !== id).flatMap((r) => [r.slug, ...(r.previousSlugs ?? [])])) : existing.slug
+      const previousSlugs = nextSlug !== existing.slug
+        ? [...new Set([...(existing.previousSlugs ?? []), existing.slug])]
+        : existing.previousSlugs
       reviews = cur.reviews.map((r) =>
-        r.id === id ? { ...r, ...base, publishedAt: nextStatus === 'published' ? r.publishedAt ?? now : r.publishedAt } : r,
+        r.id === id ? { ...r, ...base, slug: nextSlug, previousSlugs, publishedAt: nextStatus === 'published' ? r.publishedAt ?? now : r.publishedAt } : r,
       )
     } else {
       id = uid('r')
