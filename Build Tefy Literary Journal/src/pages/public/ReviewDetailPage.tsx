@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Link, useParams } from 'react-router'
+import { Link, useNavigate, useParams } from 'react-router'
 import { ArrowLeft, ArrowRight, Link2, Share2 } from 'lucide-react'
 import { useContent, usePublishedReviews } from '@/hooks/useContent'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
@@ -47,7 +47,11 @@ export function ReviewDetailPage() {
   const { slug } = useParams()
   const { state } = useContent()
   const views = usePublishedReviews()
-  const view = views.find((v) => v.review.slug === slug)
+  const navigate = useNavigate()
+  const view = views.find((v) => v.review.slug === slug || v.review.previousSlugs?.includes(slug ?? ''))
+  useEffect(() => {
+    if (view && slug !== view.review.slug) navigate(`/resenas/${view.review.slug}`, { replace: true })
+  }, [view, slug, navigate])
   const [level, setLevel] = useLocalPreference<FontLevel>('tefy:font-size', 'md', LEVELS)
   const progress = useReadingProgress()
   const { toast } = useFeedback()
