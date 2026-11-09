@@ -57,6 +57,23 @@ jobs:
         working-directory: backend
         run: go test ./... && go vet ./... && go build ./...
 
+  sonarqube:
+    name: SonarQube analysis
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Analyze with SonarQube
+        if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+        uses: SonarSource/sonarqube-scan-action@v5
+        env:
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        with:
+          args: >-
+            -Dsonar.projectKey=Blog-tefy
+            -Dsonar.sources=.
+            -Dsonar.exclusions=**/node_modules/**,**/dist/**,**/coverage/**,**/vendor/**,**/.git/**
+
   compose:
     name: Compose configuration
     runs-on: ubuntu-latest
