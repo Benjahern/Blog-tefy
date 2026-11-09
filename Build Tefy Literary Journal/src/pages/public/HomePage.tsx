@@ -11,6 +11,7 @@ import { HummingbirdRating } from '@/components/rating/HummingbirdRating'
 import { GenreCard } from '@/components/books/GenreCard'
 import { SeriesCard } from '@/components/books/SeriesCard'
 import type { ReviewView } from '@/types'
+import { reviewFontFamily } from '@/lib/reviewFonts'
 
 export function HomePage() {
   useDocumentTitle()
@@ -127,10 +128,10 @@ function FeaturedComposition({ views }: { views: ReviewView[] }) {
         <BookCover book={main.book} size="md" className="w-[160px] transition-transform duration-300 group-hover:-translate-y-1 sm:w-full" />
         <div className="mt-6 flex flex-col sm:mt-0">
           <p className="text-[11px] font-medium uppercase tracking-[0.2em] text-sage">{main.genres.map((g) => g.name).join(' · ')}</p>
-          <h3 className="mt-3 font-serif text-[clamp(2rem,3.6vw,3rem)] font-semibold leading-[1.02] text-ink">{main.book.title}</h3>
-          <p className="mt-2 text-ink-2">{main.book.author}</p>
-          {main.review.title && <p className="mt-6 font-serif text-xl italic text-mist">“{main.review.title}”</p>}
-          <p className="mt-4 line-clamp-4 text-[15px] leading-relaxed text-ink-2">{main.review.excerpt}</p>
+          <h3 style={{ fontFamily: reviewFontFamily(main.book.titleFont) }} className="mt-3 text-[clamp(2rem,3.6vw,3rem)] font-semibold leading-[1.02] text-ink">{main.book.title}</h3>
+          <p style={{ fontFamily: reviewFontFamily(main.book.authorFont) }} className="mt-2 text-ink-2">{main.book.author}</p>
+          {main.review.title && <p style={{ fontFamily: reviewFontFamily(main.review.titleFont) }} className="mt-6 text-xl italic text-mist">“{main.review.title}”</p>}
+          <p style={{ fontFamily: reviewFontFamily(main.review.excerptFont) }} className="mt-4 line-clamp-4 text-[15px] leading-relaxed text-ink-2">{main.review.excerpt}</p>
           <div className="mt-auto flex flex-wrap items-center justify-between gap-4 pt-7">
             <HummingbirdRating value={main.review.rating} size="md" />
             <span className="inline-flex items-center gap-1.5 text-[14px] font-medium text-mist group-hover:text-ink">Leer reseña <ArrowRight size={15} /></span>
@@ -142,10 +143,10 @@ function FeaturedComposition({ views }: { views: ReviewView[] }) {
           <Link key={v.review.id} to={`/resenas/${v.review.slug}`} className={`group flex gap-6 rounded-2xl border border-line bg-night-2/60 p-6 transition-[border-color,transform] duration-200 hover:-translate-y-[3px] hover:border-[#3d6475] ${i === 1 ? 'lg:ml-10' : ''}`}>
             <BookCover book={v.book} size="sm" className="w-[86px] shrink-0" />
             <div className="min-w-0">
-              <p className="font-serif text-[1.6rem] font-semibold leading-tight text-ink">{v.book.title}</p>
-              <p className="mt-1 text-[14px] text-ink-2">{v.book.author}</p>
+              <p style={{ fontFamily: reviewFontFamily(v.book.titleFont) }} className="text-[1.6rem] font-semibold leading-tight text-ink">{v.book.title}</p>
+              <p style={{ fontFamily: reviewFontFamily(v.book.authorFont) }} className="mt-1 text-[14px] text-ink-2">{v.book.author}</p>
               <div className="mt-3"><HummingbirdRating value={v.review.rating} size="sm" /></div>
-              <p className="mt-3 line-clamp-2 text-[14px] leading-relaxed text-ink-3">{v.review.excerpt}</p>
+              <p style={{ fontFamily: reviewFontFamily(v.review.excerptFont) }} className="mt-3 line-clamp-2 text-[14px] leading-relaxed text-ink-3">{v.review.excerpt}</p>
             </div>
           </Link>
         ))}

@@ -9,6 +9,7 @@ import { EmptyState } from '@/components/ui/Decor'
 import { ButtonLink } from '@/components/ui/Button'
 import { defaultImages } from '@/data/images'
 import { NotFoundPage } from './NotFoundPage'
+import { reviewFontFamily } from '@/lib/reviewFonts'
 
 export function CollectionsPage() {
   useDocumentTitle('Colecciones')
@@ -53,10 +54,10 @@ export function CollectionDetailPage() {
                 <Link to={`/resenas/${v.review.slug}`} className="group flex flex-1 gap-5 rounded-2xl border border-line bg-night-2/60 p-5 transition-[border-color,transform] duration-200 hover:-translate-y-[3px] hover:border-[#3d6475] sm:p-6">
                   <BookCover book={v.book} size="sm" className="w-[80px] shrink-0 sm:w-[100px]" />
                   <div className="min-w-0">
-                    <h2 className="font-serif text-[1.7rem] font-semibold leading-tight text-ink">{v.book.title}</h2>
-                    <p className="mt-1 text-[14px] text-ink-2">{v.book.author}</p>
+                    <h2 style={{ fontFamily: reviewFontFamily(v.book.titleFont) }} className="text-[1.7rem] font-semibold leading-tight text-ink">{v.book.title}</h2>
+                    <p style={{ fontFamily: reviewFontFamily(v.book.authorFont) }} className="mt-1 text-[14px] text-ink-2">{v.book.author}</p>
                     <div className="mt-3"><HummingbirdRating value={v.review.rating} size="sm" /></div>
-                    <p className="mt-3 line-clamp-2 text-[14.5px] leading-relaxed text-ink-2">{v.review.excerpt}</p>
+                    <p style={{ fontFamily: reviewFontFamily(v.review.excerptFont) }} className="mt-3 line-clamp-2 text-[14.5px] leading-relaxed text-ink-2">{v.review.excerpt}</p>
                   </div>
                 </Link>
               </li>

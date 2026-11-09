@@ -9,6 +9,10 @@
 }
 .tefy-prose > * + * { margin-top: 1.15em; }
 .tefy-prose p { text-align: left; }
+.tefy-prose [data-align="left"] { text-align: left; }
+.tefy-prose [data-align="center"] { text-align: center; }
+.tefy-prose [data-align="right"] { text-align: right; }
+.tefy-prose [data-align="justify"] { text-align: justify; }
 .tefy-prose [data-font="times-new-roman"] { font-family: "Times New Roman", Times, serif; }
 .tefy-prose [data-font="arial"] { font-family: Arial, Helvetica, sans-serif; }
 .tefy-prose [data-font="georgia"] { font-family: Georgia, serif; }

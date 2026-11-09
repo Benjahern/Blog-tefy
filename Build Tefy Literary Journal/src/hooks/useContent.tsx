@@ -81,6 +81,9 @@ export function ContentProvider({ children }: { children: ReactNode }) {
     const bookPatch: Omit<Book, 'id'> = {
       title: input.bookTitle.trim(),
       author: input.author.trim(),
+      titleFont: input.bookTitleFont ?? 'default',
+      authorFont: input.authorFont ?? 'default',
+      synopsisFont: input.synopsisFont ?? 'default',
       coverUrl: input.coverUrl,
       synopsis: input.synopsis.trim() || undefined,
       genreIds,
@@ -100,9 +103,12 @@ export function ContentProvider({ children }: { children: ReactNode }) {
     const base = {
       bookId,
       title: input.reviewTitle.trim() || undefined,
+      titleFont: input.reviewTitleFont ?? 'default',
       content,
       excerpt: input.excerpt.trim() || autoExcerpt(content),
+      excerptFont: input.excerptFont ?? 'default',
       closingThought: input.closingThought.trim() || undefined,
+      closingThoughtFont: input.closingThoughtFont ?? 'default',
       rating: round1(input.rating),
       status: nextStatus,
       updatedAt: now,

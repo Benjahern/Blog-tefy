@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { Bold, EyeOff, Heading2, Heading3, ImagePlus, Italic, Link2, List, ListOrdered, LoaderCircle, Pilcrow, Quote } from 'lucide-react'
+import { AlignCenter, AlignJustify, AlignLeft, AlignRight, Bold, EyeOff, Heading2, Heading3, ImagePlus, Italic, Link2, List, ListOrdered, LoaderCircle, Pilcrow, Quote, Underline } from 'lucide-react'
 import { fileToCompressedDataUrl, ImageError } from '@/lib/images'
 import { Dialog } from '@/components/ui/Dialog'
 import { Button } from '@/components/ui/Button'
@@ -8,8 +8,8 @@ import { REVIEW_FONTS, reviewFontIdFromFace, type ReviewFontId } from '@/lib/rev
 
 type Props = { value: string; onChange: (html: string) => void; resetKey?: string; labelledBy?: string; onError?: (msg: string) => void }
 
-type Active = { bold: boolean; italic: boolean; ul: boolean; ol: boolean; block: string; spoiler: boolean }
-const NONE: Active = { bold: false, italic: false, ul: false, ol: false, block: 'p', spoiler: false }
+type Active = { bold: boolean; italic: boolean; ul: boolean; ol: boolean; block: string; spoiler: boolean; align: string }
+const NONE: Active = { bold: false, italic: false, ul: false, ol: false, block: 'p', spoiler: false, align: 'left' }
 
 /**
  * Lightweight contentEditable editor: formatting through a toolbar, no Markdown or HTML needed.
@@ -47,6 +47,7 @@ export function RichTextEditor({ value, onChange, resetKey, labelledBy, onError 
       ol: document.queryCommandState('insertOrderedList'),
       block: String(document.queryCommandValue('formatBlock') || 'p').toLowerCase().replace(/[<>]/g, ''),
       spoiler: !!el?.closest('[data-spoiler]'),
+      align: ['center', 'right', 'justify'].find((a) => document.queryCommandState(`justify${a[0].toUpperCase()}${a.slice(1)}`)) ?? 'left',
     })
     const fontEl = el?.closest('[data-font], font[face]')
     setFont(fontEl ? (fontEl.hasAttribute('data-font') ? (fontEl.getAttribute('data-font') as ReviewFontId) : reviewFontIdFromFace(fontEl.getAttribute('face') ?? '')) : 'default')
@@ -144,6 +145,7 @@ export function RichTextEditor({ value, onChange, resetKey, labelledBy, onError 
   const tools = [
     { label: 'Negrita', Icon: Bold, on: active.bold, run: () => exec('bold') },
     { label: 'Cursiva', Icon: Italic, on: active.italic, run: () => exec('italic') },
+    { label: 'Subrayado', Icon: Underline, on: document.queryCommandState('underline'), run: () => exec('underline') },
     { sep: true },
     { label: 'Párrafo normal', Icon: Pilcrow, on: active.block === 'p' && !active.ul && !active.ol, run: () => exec('formatBlock', 'p') },
     { label: 'Título de sección', Icon: Heading2, on: active.block === 'h2', run: () => block('h2') },
@@ -152,6 +154,11 @@ export function RichTextEditor({ value, onChange, resetKey, labelledBy, onError 
     { sep: true },
     { label: 'Lista con viñetas', Icon: List, on: active.ul, run: () => exec('insertUnorderedList') },
     { label: 'Lista numerada', Icon: ListOrdered, on: active.ol, run: () => exec('insertOrderedList') },
+    { sep: true },
+    { label: 'Alinear a la izquierda', Icon: AlignLeft, on: active.align === 'left', run: () => exec('justifyLeft') },
+    { label: 'Centrar', Icon: AlignCenter, on: active.align === 'center', run: () => exec('justifyCenter') },
+    { label: 'Alinear a la derecha', Icon: AlignRight, on: active.align === 'right', run: () => exec('justifyRight') },
+    { label: 'Justificar', Icon: AlignJustify, on: active.align === 'justify', run: () => exec('justifyFull') },
     { sep: true },
     { label: 'Agregar enlace', Icon: Link2, on: false, run: () => { saveSelection(); setLinkUrl(''); setLinkOpen(true) } },
     { label: 'Agregar imágenes', Icon: uploading ? LoaderCircle : ImagePlus, on: false, run: () => { saveSelection(); fileRef.current?.click() } },

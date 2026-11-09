@@ -9,6 +9,9 @@ export type Book = {
   genreIds: string[]
   seriesId?: string
   seriesOrder?: number
+  titleFont?: import('@/lib/reviewFonts').ReviewFontId
+  authorFont?: import('@/lib/reviewFonts').ReviewFontId
+  synopsisFont?: import('@/lib/reviewFonts').ReviewFontId
 }
 
 export type Review = {
@@ -17,6 +20,9 @@ export type Review = {
   slug: string
   /** Previous public URLs kept as aliases after a slug change. */
   previousSlugs?: string[]
+  titleFont?: import('@/lib/reviewFonts').ReviewFontId
+  excerptFont?: import('@/lib/reviewFonts').ReviewFontId
+  closingThoughtFont?: import('@/lib/reviewFonts').ReviewFontId
   /** Optional editorial headline for the review. */
   title?: string
   excerpt: string
@@ -108,4 +114,10 @@ export type ReviewDraftInput = {
   content: string
   excerpt: string
   closingThought: string
+  bookTitleFont?: import('@/lib/reviewFonts').ReviewFontId
+  authorFont?: import('@/lib/reviewFonts').ReviewFontId
+  synopsisFont?: import('@/lib/reviewFonts').ReviewFontId
+  reviewTitleFont?: import('@/lib/reviewFonts').ReviewFontId
+  excerptFont?: import('@/lib/reviewFonts').ReviewFontId
+  closingThoughtFont?: import('@/lib/reviewFonts').ReviewFontId
 }
