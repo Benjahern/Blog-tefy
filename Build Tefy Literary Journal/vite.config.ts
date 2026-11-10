@@ -36,7 +36,7 @@ react(),
       host: process.env.FIGMA_DEV_SERVER_HOST || '0.0.0.0',
       port: parseInt(process.env.PORT || '8443'),
       strictPort: true,
-      proxy: { '/api': { target: process.env.API_PROXY_TARGET || 'http://backend:8080', changeOrigin: true } },
+      proxy: { '/api': { target: process.env.API_PROXY_TARGET || 'http://backend:8080', changeOrigin: true } }, // NOSONAR -- private Docker-network development proxy; production TLS terminates at the public reverse proxy.
       watch: {
         ignored: [
           '**/.figma/**',
@@ -312,7 +312,7 @@ function figmaReactRefreshBoundaryFallback(): Plugin {
         pending.push(...current.importers)
       }
     },
-    transform(code, id) {
+    transform(code, id) { // NOSONAR -- Vite requires null from a non-transforming hook to preserve module code and source maps.
       if (!/\.[jt]sx?(?:\?|$)/.test(id) || id.includes('/node_modules/')) return null
 
       const moduleId = id.split('?')[0] ?? id

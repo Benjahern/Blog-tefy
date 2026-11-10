@@ -12,10 +12,10 @@ export const seedGenres: Genre[] = [
 ]
 
 export const seedSeries: Series[] = [
-  { id: 's_dune', name: 'Crónicas de Dune', slug: 'cronicas-de-dune', description: 'La saga de Arrakis: política, ecología, religión y el peso de un destino que nadie pidió.' },
-  { id: 's_hp', name: 'Harry Potter', slug: 'harry-potter', description: 'Siete años en Hogwarts. Una saga que acompañó a toda una generación de lectores.' },
-  { id: 's_thg', name: 'Los juegos del hambre', slug: 'los-juegos-del-hambre', description: 'Panem, los distritos y una chica que se ofreció como tributo por amor a su hermana.' },
-  { id: 's_kkc', name: 'Crónica del asesino de reyes', slug: 'cronica-del-asesino-de-reyes', description: 'La historia de Kvothe contada por él mismo, en una posada perdida al borde del mundo.' },
+  { id: 's_dune', name: 'Crónicas de Dune', slug: 'cronicas-de-dune', kind: 'saga', description: 'La saga de Arrakis: política, ecología, religión y el peso de un destino que nadie pidió.' },
+  { id: 's_hp', name: 'Harry Potter', slug: 'harry-potter', kind: 'saga', description: 'Siete años en Hogwarts. Una saga que acompañó a toda una generación de lectores.' },
+  { id: 's_thg', name: 'Los juegos del hambre', slug: 'los-juegos-del-hambre', kind: 'trilogy', description: 'Panem, los distritos y una chica que se ofreció como tributo por amor a su hermana.' },
+  { id: 's_kkc', name: 'Crónica del asesino de reyes', slug: 'cronica-del-asesino-de-reyes', kind: 'saga', description: 'La historia de Kvothe contada por él mismo, en una posada perdida al borde del mundo.' },
 ]
 
 export const seedBooks: Book[] = [

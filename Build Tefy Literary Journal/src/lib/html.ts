@@ -1,14 +1,9 @@
 import { isReviewFontId, reviewFontIdFromFace } from './reviewFonts'
+import { safeUrl } from './safeUrl.mjs'
 
 /** Small allowlist sanitizer for review HTML. Runs in the browser via DOMParser. */
 const ALLOWED = new Set(['P', 'BR', 'STRONG', 'B', 'EM', 'I', 'U', 'H2', 'H3', 'UL', 'OL', 'LI', 'BLOCKQUOTE', 'A', 'IMG', 'FIGURE', 'FIGCAPTION', 'DIV', 'SPAN', 'FONT'])
 const DROP = new Set(['SCRIPT', 'STYLE', 'IFRAME', 'OBJECT', 'EMBED', 'LINK', 'META', 'svg', 'SVG'])
-
-const safeUrl = (url: string, forImage = false) => {
-  const u = url.trim()
-  if (forImage) return /^(https:\/\/|data:image\/(png|jpe?g|webp|gif);)/i.test(u) || u.startsWith('/') ? u : ''
-  return /^(https?:\/\/|mailto:|\/)/i.test(u) ? u : ''
-}
 
 function clean(node: Node, doc: Document): Node[] {
   if (node.nodeType === Node.TEXT_NODE) return [doc.createTextNode(node.textContent ?? '')]
@@ -57,7 +52,7 @@ function clean(node: Node, doc: Document): Node[] {
 }
 
 export function sanitizeHtml(html: string): string {
-  if (typeof DOMParser === 'undefined') return html
+  if (typeof DOMParser === 'undefined') return html.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
   const doc = new DOMParser().parseFromString(`<body>${html}</body>`, 'text/html')
   const container = doc.createElement('div')
   Array.from(doc.body.childNodes)

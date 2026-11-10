@@ -2,7 +2,8 @@
 set -eu
 
 index=/usr/share/nginx/html/index.html
-temporary="${index}.tmp"
+temporary=$(mktemp)
+trap 'rm -f "$temporary"' EXIT
 
 envsubst '${SITE_URL} ${CLARITY_ID}' < "$index" > "$temporary"
-mv "$temporary" "$index"
+cat "$temporary" > "$index"

@@ -45,11 +45,25 @@ export type Genre = {
   image?: string
 }
 
+export type SeriesKind = 'saga' | 'trilogy' | 'bilogy' | 'standalone'
+
+export const SERIES_KIND_LABELS: Record<SeriesKind, string> = {
+  saga: 'Saga',
+  trilogy: 'Trilogía',
+  bilogy: 'Bilogía',
+  standalone: 'Autoconclusivo',
+}
+
+export const seriesKindLabel = (kind?: SeriesKind) => SERIES_KIND_LABELS[kind ?? 'saga']
+
 export type Series = {
   id: string
   name: string
   slug: string
   description?: string
+  image?: string
+  /** Defaults to saga for records created before collection kinds were introduced. */
+  kind?: SeriesKind
 }
 
 export type SocialLinks = {

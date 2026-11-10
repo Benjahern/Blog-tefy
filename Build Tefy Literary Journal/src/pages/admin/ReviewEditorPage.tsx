@@ -271,17 +271,20 @@ function Wizard({ initial, initialId }: { initial: ReviewDraftInput; initialId?:
                 </div>
               </fieldset>
               <div className="grid gap-4 sm:grid-cols-[1fr_140px]">
-                <SelectField label="Saga o colección" optional value={form.seriesId ?? ''} onChange={(e) => patch({ seriesId: e.target.value || undefined })}>
-                  <option value="">No pertenece a una saga</option>
-                  {state.series.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
+                <SelectField label="Saga, serie o colección" optional value={form.seriesId ?? ''} onChange={(e) => {
+                  const selected = state.series.find((series) => series.id === e.target.value)
+                  patch({ seriesId: selected?.id, seriesOrder: !selected || selected.kind === 'standalone' ? undefined : form.seriesOrder })
+                }}>
+                  <option value="">No pertenece a una colección</option>
+                  {state.series.map((s) => <option key={s.id} value={s.id}>{s.name} · {s.kind === 'standalone' ? 'Autoconclusivo' : s.kind === 'trilogy' ? 'Trilogía' : s.kind === 'bilogy' ? 'Bilogía' : 'Saga'}</option>)}
                 </SelectField>
-                <TextField label="Número" optional type="number" min={1} value={form.seriesOrder ?? ''} disabled={!form.seriesId} onChange={(e) => patch({ seriesOrder: e.target.value ? Math.max(1, parseInt(e.target.value)) : undefined })} />
+                <TextField label="Número" optional type="number" min={1} value={form.seriesOrder ?? ''} disabled={!form.seriesId || state.series.find((series) => series.id === form.seriesId)?.kind === 'standalone'} onChange={(e) => patch({ seriesOrder: e.target.value ? Math.max(1, Number.parseInt(e.target.value)) : undefined })} />
               </div>
               <div className="flex gap-2">
-                <input aria-label="Nombre de una nueva saga" value={newSeries} onChange={(e) => setNewSeries(e.target.value)} placeholder="¿No está la saga? Escribe su nombre" className={inputClass} />
+                <input aria-label="Nombre de una nueva colección" value={newSeries} onChange={(e) => setNewSeries(e.target.value)} placeholder="¿No está la colección? Escribe su nombre" className={inputClass} />
                 <Button variant="secondary" disabled={!newSeries.trim()} onClick={() => {
                   const sid = addSeries(newSeries.trim())
-                  if (sid) { patch({ seriesId: sid }); setNewSeries(''); toast('Saga creada y seleccionada.') }
+                  if (sid) { patch({ seriesId: sid }); setNewSeries(''); toast('Colección creada y seleccionada.') }
                 }}><Plus size={16} /> Crear</Button>
               </div>
               <div><TextArea label="Sinopsis del libro" optional value={form.synopsis} style={{ fontFamily: reviewFontFamily(form.synopsisFont) }} onChange={(e) => patch({ synopsis: e.target.value })} placeholder="Unas líneas sobre de qué trata el libro, sin spoilers." /><ReviewFontSelect label="sinopsis" value={form.synopsisFont} onChange={(synopsisFont) => patch({ synopsisFont })} /></div>

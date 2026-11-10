@@ -10,6 +10,7 @@ import { ButtonLink } from '@/components/ui/Button'
 import { defaultImages } from '@/data/images'
 import { NotFoundPage } from './NotFoundPage'
 import { reviewFontFamily } from '@/lib/reviewFonts'
+import { seriesKindLabel } from '@/types'
 
 export function CollectionsPage() {
   useDocumentTitle('Colecciones')
@@ -18,8 +19,8 @@ export function CollectionsPage() {
   const list = state.series.map((s) => ({ series: s, views: views.filter((v) => v.series?.id === s.id) })).filter((x) => x.views.length)
   return (
     <>
-      <PageHero eyebrow="Para leer en orden" title="Colecciones y sagas" image={defaultImages.hero} position="50% 30%">
-        Mundos que no caben en un solo libro. Aquí están las sagas que he recorrido, tomo a tomo.
+      <PageHero eyebrow="Libros relacionados" title="Colecciones y sagas" image={defaultImages.hero} position="50% 30%">
+        Sagas, trilogías, bilogías y libros autoconclusivos, hilados para encontrar cada lectura en su lugar.
       </PageHero>
       <div className="mx-auto max-w-[1280px] px-5 sm:px-8">
         {list.length ? (
@@ -42,7 +43,7 @@ export function CollectionDetailPage() {
   const list = views.filter((v) => v.series?.id === series.id).sort((a, b) => (a.book.seriesOrder ?? 99) - (b.book.seriesOrder ?? 99))
   return (
     <>
-      <PageHero eyebrow="Saga" title={series.name} image={defaultImages.hero} position="50% 30%">{series.description}</PageHero>
+      <PageHero eyebrow={seriesKindLabel(series.kind)} title={series.name} image={series.image || defaultImages.hero} position="50% 30%">{series.description}</PageHero>
       <div className="mx-auto max-w-[960px] px-5 sm:px-8">
         {list.length === 0 ? (
           <EmptyState title="Sin reseñas publicadas" message="Esta saga todavía no tiene reseñas publicadas." action={<ButtonLink to="/colecciones" variant="secondary">Ver colecciones</ButtonLink>} />
