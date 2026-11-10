@@ -28,10 +28,16 @@ jobs:
         run: pnpm exec c8 --all --include='src/lib/**/*.mjs' --exclude='tests/**' --reports-dir=coverage --reporter=lcov --reporter=text node --test tests/*.test.mjs
       - name: Make LCOV paths relative to the repository root
         run: sed -i 's#SF:src/#SF:Build Tefy Literary Journal/src/#' coverage/lcov.info
+      - name: Test taxonomy and public UI with coverage
+        run: pnpm test:ui
+      - name: Make component LCOV paths relative to the repository root
+        run: sed -i 's#SF:src/#SF:Build Tefy Literary Journal/src/#' coverage/vitest/lcov.info
       - uses: actions/upload-artifact@v4
         with:
           name: frontend-coverage
-          path: Build Tefy Literary Journal/coverage/lcov.info
+          path: |
+            Build Tefy Literary Journal/coverage/lcov.info
+            Build Tefy Literary Journal/coverage/vitest/lcov.info
       - name: Type-check frontend
         run: pnpm exec tsc --noEmit
       - run: pnpm build
@@ -92,7 +98,7 @@ jobs:
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         with:
-          args: -Dsonar.projectKey=blog-tefy
+          args: -Dsonar.projectKey=blog-tefy -Dsonar.qualitygate.wait=true
 
   compose:
     name: Compose configuration

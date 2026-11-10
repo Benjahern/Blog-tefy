@@ -11,6 +11,8 @@ import (
 	"errors"
 	"fmt"
 	"golang.org/x/crypto/argon2"
+	"html"
+	htmltemplate "html/template"
 	"log"
 	"net/http"
 	"net/url"
@@ -70,6 +72,7 @@ func main() {
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /healthz", func(w http.ResponseWriter, _ *http.Request) { jsonResponse(w, 200, map[string]string{"status": "ok"}) })
 	mux.HandleFunc("GET /api/v1/public/content", a.publicContent)
+	mux.HandleFunc("GET /api/v1/public/review-html/{slug}", a.publicReviewHTML)
 	mux.HandleFunc("GET /api/v1/public/sitemap.xml", a.publicSitemap)
 	mux.HandleFunc("GET /robots.txt", a.robotsTxt)
 	mux.HandleFunc("GET /api/v1/auth/csrf", a.csrf)
@@ -260,6 +263,235 @@ func (a *app) publicContent(w http.ResponseWriter, r *http.Request) {
 	}
 	doc.Books = books
 	jsonResponse(w, 200, doc)
+}
+
+type reviewSEOPageData struct {
+	Title         string
+	Description   string
+	SiteName      string
+	Canonical     string
+	BookTitle     string
+	BookAuthor    string
+	ReviewTitle   string
+	PublishedAt   string
+	Rating        string
+	CoverURL      string
+	ReviewContent htmltemplate.HTML
+	JSONLD        htmltemplate.JS
+}
+
+var reviewSEOPageTemplate = htmltemplate.Must(htmltemplate.New("review-seo").Parse(`<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{.Title}}</title><meta name="description" content="{{.Description}}">
+  <meta name="robots" content="index, follow"><link rel="canonical" href="{{.Canonical}}">
+  <meta property="og:type" content="article"><meta property="og:site_name" content="{{.SiteName}}">
+  <meta property="og:title" content="{{.Title}}"><meta property="og:description" content="{{.Description}}">
+  <meta property="og:url" content="{{.Canonical}}"><meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="{{.Title}}"><meta name="twitter:description" content="{{.Description}}">
+  {{if .CoverURL}}<meta property="og:image" content="{{.CoverURL}}"><meta name="twitter:image" content="{{.CoverURL}}">{{end}}
+  {{if .PublishedAt}}<meta property="article:published_time" content="{{.PublishedAt}}">{{end}}
+  <link rel="stylesheet" href="/assets/app.css"><link rel="icon" href="/favicon.svg">
+  <script type="application/ld+json">{{.JSONLD}}</script>
+  <style>
+    :root{color-scheme:dark;font-family:Inter,system-ui,sans-serif;background:#07131c;color:#e1e7df}*{box-sizing:border-box}
+    body{margin:0;line-height:1.7}a{color:#91b8c9}.seo-shell{max-width:920px;margin:auto;padding:36px 24px 80px}
+    .seo-nav{display:flex;justify-content:space-between;gap:20px;padding:12px 0 32px;border-bottom:1px solid #294450}
+    .seo-nav a:first-child{font:600 25px Georgia,serif;text-decoration:none;color:#e1e7df}
+    article{max-width:720px;margin:50px auto 0}.seo-label{color:#a3bdb0;text-transform:uppercase;letter-spacing:.16em;font-size:12px}
+    h1{font:600 clamp(38px,7vw,64px)/1.05 Georgia,serif;margin:16px 0 8px}h2{font:500 32px/1.2 Georgia,serif}
+    .seo-author,.seo-meta{color:#a8b8be}.seo-excerpt{font:italic 22px/1.5 Georgia,serif;color:#91b8c9;margin:32px 0}
+    .seo-cover{max-width:220px;max-height:320px;object-fit:cover;float:right;margin:0 0 24px 28px;border-radius:12px}
+    .seo-content{font:18px/1.85 Georgia,serif}.seo-content img{max-width:100%;height:auto}.seo-content blockquote{border-left:2px solid #91b8c9;padding-left:20px;color:#a8b8be}
+    @media(max-width:600px){.seo-shell{padding:20px 18px 56px}article{margin-top:34px}.seo-cover{max-width:130px;max-height:200px}}
+  </style>
+</head>
+<body><main id="root"><div class="seo-shell">
+  <nav class="seo-nav" aria-label="Navegación"><a href="/">{{.SiteName}}</a><a href="/resenas">Todas las reseñas</a></nav>
+  <article>
+    <p class="seo-label">Reseña literaria</p>
+    {{if .CoverURL}}<img class="seo-cover" src="{{.CoverURL}}" alt="Portada de {{.BookTitle}}">{{end}}
+    <h1>{{.BookTitle}}</h1><p class="seo-author">{{.BookAuthor}}</p>
+    <p class="seo-meta">Calificación: {{.Rating}} de 5{{if .PublishedAt}} · Publicada el <time datetime="{{.PublishedAt}}">{{.PublishedAt}}</time>{{end}}</p>
+    {{if .ReviewTitle}}<h2>{{.ReviewTitle}}</h2>{{end}}
+    {{if .Description}}<p class="seo-excerpt">{{.Description}}</p>{{end}}
+    <div class="seo-content">{{.ReviewContent}}</div>
+  </article>
+</div></main><script type="module" src="/assets/app.js"></script></body>
+</html>`))
+
+func (a *app) publicReviewHTML(w http.ResponseWriter, r *http.Request) {
+	var doc state
+	err := a.db.Collection("site_content").FindOne(r.Context(), bson.M{"_id": "main"}).Decode(&doc)
+	if err != nil && !errors.Is(err, mongo.ErrNoDocuments) {
+		http.Error(w, "No se pudo cargar la reseña", http.StatusInternalServerError)
+		return
+	}
+	if err == nil {
+		normalizeState(&doc)
+	}
+	page, redirectTo, found, err := buildReviewSEOPage(doc, r.PathValue("slug"), siteBaseURL())
+	if err != nil {
+		http.Error(w, "No se pudo generar la reseña", http.StatusInternalServerError)
+		return
+	}
+	if redirectTo != "" {
+		http.Redirect(w, r, redirectTo, http.StatusMovedPermanently)
+		return
+	}
+	if !found {
+		http.NotFound(w, r)
+		return
+	}
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	w.Header().Set("Cache-Control", "public, max-age=60, s-maxage=60")
+	w.WriteHeader(http.StatusOK)
+	if err := reviewSEOPageTemplate.Execute(w, page); err != nil {
+		log.Printf("render review SEO page: %v", err)
+	}
+}
+
+func buildReviewSEOPage(doc state, requestedSlug, siteURL string) (reviewSEOPageData, string, bool, error) {
+	var review, book bson.M
+	for _, raw := range doc.Reviews {
+		candidate := asMap(raw)
+		if candidate["status"] != "published" {
+			continue
+		}
+		if stringValue(candidate["slug"]) == requestedSlug {
+			review = candidate
+			break
+		}
+		for _, alias := range stringValues(candidate["previousSlugs"]) {
+			if alias == requestedSlug {
+				return reviewSEOPageData{}, strings.TrimRight(siteURL, "/") + "/resenas/" + url.PathEscape(stringValue(candidate["slug"])), false, nil
+			}
+		}
+	}
+	if review == nil {
+		return reviewSEOPageData{}, "", false, nil
+	}
+	bookID := stringValue(review["bookId"])
+	for _, raw := range doc.Books {
+		candidate := asMap(raw)
+		if stringValue(candidate["id"]) == bookID {
+			book = candidate
+			break
+		}
+	}
+	if book == nil {
+		return reviewSEOPageData{}, "", false, nil
+	}
+	bookTitle := stringValue(book["title"])
+	if bookTitle == "" {
+		bookTitle = "Reseña literaria"
+	}
+	settings := doc.Settings
+	siteName := stringValue(settings["siteName"])
+	if siteName == "" {
+		siteName = "Nia"
+	}
+	canonical := strings.TrimRight(siteURL, "/") + "/resenas/" + url.PathEscape(stringValue(review["slug"]))
+	excerpt := plainSEOText(stringValue(review["excerpt"]))
+	content := reviewContentPolicy().Sanitize(stringValue(review["content"]))
+	contentText := plainSEOText(content)
+	if excerpt == "" {
+		excerpt = truncateRunes(contentText, 300)
+	}
+	date := stringValue(review["publishedAt"])
+	if date == "" {
+		date = stringValue(review["updatedAt"])
+	}
+	rating := numericValue(review["rating"])
+	coverURL := publicSEOImage(stringValue(book["coverUrl"]), siteURL)
+	profileName := stringValue(settings["profileName"])
+	if profileName == "" {
+		profileName = "Nia"
+	}
+	data := map[string]any{
+		"@context": "https://schema.org", "@type": "Review", "name": bookTitle + " — reseña",
+		"reviewBody": truncateRunes(contentText, 5000), "url": canonical,
+		"author":       map[string]string{"@type": "Person", "name": profileName},
+		"itemReviewed": map[string]any{"@type": "Book", "name": bookTitle, "author": map[string]string{"@type": "Person", "name": stringValue(book["author"])}},
+		"reviewRating": map[string]any{"@type": "Rating", "ratingValue": rating, "bestRating": 5},
+	}
+	if date != "" {
+		data["datePublished"] = date
+	}
+	if coverURL != "" {
+		data["image"] = coverURL
+	}
+	jsonLD, err := json.Marshal(data)
+	if err != nil {
+		return reviewSEOPageData{}, "", false, err
+	}
+	return reviewSEOPageData{
+		Title: bookTitle + " — reseña | " + siteName, Description: excerpt, SiteName: siteName, Canonical: canonical,
+		BookTitle: bookTitle, BookAuthor: stringValue(book["author"]), ReviewTitle: stringValue(review["title"]),
+		PublishedAt: date, Rating: fmt.Sprintf("%.1f", rating), CoverURL: coverURL,
+		ReviewContent: htmltemplate.HTML(content), JSONLD: htmltemplate.JS(jsonLD),
+	}, "", true, nil
+}
+
+func stringValues(value any) []string {
+	var values []string
+	switch items := value.(type) {
+	case []any:
+		for _, item := range items {
+			if text, ok := item.(string); ok {
+				values = append(values, text)
+			}
+		}
+	case []string:
+		values = items
+	}
+	return values
+}
+
+func numericValue(value any) float64 {
+	switch number := value.(type) {
+	case float64:
+		return number
+	case float32:
+		return float64(number)
+	case int:
+		return float64(number)
+	case int32:
+		return float64(number)
+	case int64:
+		return float64(number)
+	default:
+		return 0
+	}
+}
+
+func plainSEOText(value string) string {
+	withoutTags := regexp.MustCompile(`<[^>]*>`).ReplaceAllString(value, " ")
+	return strings.Join(strings.Fields(html.UnescapeString(withoutTags)), " ")
+}
+
+func truncateRunes(value string, limit int) string {
+	runes := []rune(value)
+	if len(runes) <= limit {
+		return value
+	}
+	return strings.TrimSpace(string(runes[:limit]))
+}
+
+func publicSEOImage(image, siteURL string) string {
+	image = strings.TrimSpace(image)
+	parsed, err := url.Parse(image)
+	if err != nil {
+		return ""
+	}
+	if parsed.IsAbs() && (parsed.Scheme == "https" || parsed.Scheme == "http") && parsed.Host != "" {
+		return image
+	}
+	if strings.HasPrefix(image, "/") && !strings.HasPrefix(image, "//") && !strings.HasPrefix(image, "/\\") {
+		return strings.TrimRight(siteURL, "/") + image
+	}
+	return ""
 }
 
 func (a *app) publicSitemap(w http.ResponseWriter, r *http.Request) {
