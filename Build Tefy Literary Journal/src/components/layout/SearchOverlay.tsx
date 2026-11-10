@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router'
 import { ArrowRight, Search, X } from 'lucide-react'
 import { Dialog } from '@/components/ui/Dialog'
@@ -12,8 +12,15 @@ export function SearchOverlay({ open, onClose }: { open: boolean; onClose: () =>
   const navigate = useNavigate()
   const [q, setQ] = useState('')
   const [active, setActive] = useState(0)
+  const inputRef = useRef<HTMLInputElement>(null)
 
-  useEffect(() => { if (open) { setQ(''); setActive(0) } }, [open])
+  useEffect(() => {
+    if (open) {
+      setQ('')
+      setActive(0)
+      inputRef.current?.focus()
+    }
+  }, [open])
 
   const results = useMemo(() => (q.trim() ? views.filter((v) => matchesQuery(v, q)).slice(0, 7) : []), [views, q])
   useEffect(() => setActive(0), [q])
@@ -35,7 +42,7 @@ export function SearchOverlay({ open, onClose }: { open: boolean; onClose: () =>
       <div className="flex items-center gap-3 border-b border-line px-5">
         <Search size={20} className="shrink-0 text-mist" aria-hidden="true" />
         <input
-          autoFocus
+          ref={inputRef}
           value={q}
           onChange={(e) => setQ(e.target.value)}
           onKeyDown={onKeyDown}

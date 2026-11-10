@@ -199,6 +199,7 @@ export function RichTextEditor({ value, onChange, resetKey, labelledBy, onError 
         aria-multiline="true"
         aria-labelledby={labelledBy}
         contentEditable
+        tabIndex={0}
         suppressContentEditableWarning
         data-placeholder="Empieza a escribir… Puedes contar tu historia con este libro como quieras."
         onInput={emit}
@@ -214,7 +215,7 @@ export function RichTextEditor({ value, onChange, resetKey, labelledBy, onError 
         className="tefy-prose tefy-editor min-h-[420px] max-w-none px-5 py-6 sm:px-8 sm:py-8"
         style={{ ['--prose-size' as string]: '18px' }}
       />
-      <input ref={fileRef} type="file" multiple accept="image/jpeg,image/png,image/webp,image/gif" className="sr-only" tabIndex={-1} aria-hidden="true" onChange={(e) => { onImages(e.target.files); e.target.value = '' }} />
+      <input ref={fileRef} type="file" multiple accept="image/jpeg,image/png,image/webp,image/gif" className="sr-only" tabIndex={-1} aria-hidden="true" onChange={(e) => { void onImages(e.target.files); e.target.value = '' }} />
       <Dialog open={linkOpen} onClose={() => setLinkOpen(false)} title="Agregar enlace">
         <form className="space-y-5 px-5 py-5" onSubmit={(e) => { e.preventDefault(); insertLink() }}>
           <TextField label="Dirección del enlace" value={linkUrl} onChange={(e) => setLinkUrl(e.target.value)} placeholder="https://…" autoFocus hint="Si seleccionaste texto antes, ese texto se convertirá en el enlace." />

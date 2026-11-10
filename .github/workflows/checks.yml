@@ -39,7 +39,7 @@ jobs:
             Build Tefy Literary Journal/coverage/lcov.info
             Build Tefy Literary Journal/coverage/vitest/lcov.info
       - name: Type-check frontend
-        run: pnpm exec tsc --noEmit
+        run: pnpm exec tsc --noEmit && pnpm exec tsc --noEmit -p tsconfig.test.json
       - run: pnpm build
       - name: Verify generated SEO assets
         run: node scripts/check-seo.mjs

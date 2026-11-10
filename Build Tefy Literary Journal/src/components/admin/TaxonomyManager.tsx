@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { ArrowDown, ArrowUp, Check, Pencil, Plus, Trash2, X } from 'lucide-react'
 import { Button, IconButton } from '@/components/ui/Button'
 import { TextField, inputClass } from '@/components/ui/Field'
@@ -30,7 +30,12 @@ export function TaxonomyManager({ items, usage, noun, onAdd, onUpdate, onDelete,
   const [image, setImage] = useState<string>()
   const [kind, setKind] = useState<SeriesKind>('saga')
   const [editing, setEditing] = useState<string | null>(null)
+  const editNameRef = useRef<HTMLInputElement>(null)
   const [draft, setDraft] = useState<{ name: string; description: string; image?: string; kind: SeriesKind }>({ name: '', description: '', kind: 'saga' })
+
+  useEffect(() => {
+    if (editing) editNameRef.current?.focus()
+  }, [editing])
 
   const add = (e: React.FormEvent) => {
     e.preventDefault()
@@ -50,7 +55,7 @@ export function TaxonomyManager({ items, usage, noun, onAdd, onUpdate, onDelete,
               <li key={item.id} className="p-4 sm:p-5">
                 {editing === item.id ? (
                   <form className="space-y-3" onSubmit={(e) => { e.preventDefault(); if (!draft.name.trim()) return; onUpdate(item.id, { name: draft.name.trim(), description: draft.description.trim() || undefined, image: draft.image, kind: draft.kind }); setEditing(null); toast('Cambios guardados.') }}>
-                    <input aria-label="Nombre" value={draft.name} onChange={(e) => setDraft({ ...draft, name: e.target.value })} className={inputClass} autoFocus />
+                    <input ref={editNameRef} aria-label="Nombre" value={draft.name} onChange={(e) => setDraft({ ...draft, name: e.target.value })} className={inputClass} />
                     <textarea aria-label="Descripción" value={draft.description} onChange={(e) => setDraft({ ...draft, description: e.target.value })} className={`${inputClass} min-h-20`} placeholder="Descripción (opcional)" />
                     {allowKind && <label className="block text-sm text-ink-2">Tipo de colección<select aria-label="Tipo de colección" value={draft.kind} onChange={(e) => setDraft({ ...draft, kind: e.target.value as SeriesKind })} className={`${inputClass} mt-1`}>{Object.entries(SERIES_KIND_LABELS).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>}
                     {allowImage && <ImageUpload label="Imagen" value={draft.image} onChange={(value) => setDraft({ ...draft, image: value })} aspect="aspect-[16/9]" maxSize={1200} hint="Imagen que aparecerá en esta categoría." />}

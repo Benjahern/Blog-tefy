@@ -10,6 +10,7 @@ import { ImageUpload } from '@/components/ui/ImageUpload'
 import { useFeedback } from '@/components/ui/Feedback'
 import { BookCover } from '@/components/books/BookCover'
 import { publishedViews } from '@/lib/selectors'
+import { isValidOptionalEmail } from '@/lib/email'
 import { defaultImages } from '@/data/images'
 
 const SECTIONS = [
@@ -32,7 +33,7 @@ function Section({ id, title, description, children }: { id: string; title: stri
 }
 
 const urlError = (v?: string) => (v && !/^https?:\/\//i.test(v) ? 'Debe empezar con https://' : undefined)
-const emailError = (v?: string) => (v && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v) ? 'Revisa el correo, parece incompleto.' : undefined)
+const emailError = (value?: string) => (isValidOptionalEmail(value) ? undefined : 'Revisa el correo, parece incompleto.')
 
 export function SettingsPage() {
   const { state, updateSettings, setFeatured, resetDemo } = useContent()
