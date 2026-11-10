@@ -1,5 +1,6 @@
 import { isReviewFontId, reviewFontIdFromFace } from './reviewFonts'
 import { safeUrl } from './safeUrl.mjs'
+import { stripHtmlTags, truncateAtWordBoundary } from './text'
 
 /** Small allowlist sanitizer for review HTML. Runs in the browser via DOMParser. */
 const ALLOWED = new Set(['P', 'BR', 'STRONG', 'B', 'EM', 'I', 'U', 'H2', 'H3', 'UL', 'OL', 'LI', 'BLOCKQUOTE', 'A', 'IMG', 'FIGURE', 'FIGCAPTION', 'DIV', 'SPAN', 'FONT'])
@@ -63,7 +64,7 @@ export function sanitizeHtml(html: string): string {
 
 /** Plain text without spoiler blocks — safe to use for previews and excerpts. */
 export function textWithoutSpoilers(html: string): string {
-  if (typeof DOMParser === 'undefined') return html.replace(/<[^>]+>/g, ' ')
+  if (typeof DOMParser === 'undefined') return stripHtmlTags(html).replace(/\s+/g, ' ').trim()
   const doc = new DOMParser().parseFromString(`<body>${html}</body>`, 'text/html')
   doc.querySelectorAll('[data-spoiler], figcaption').forEach((n) => n.remove())
   doc.querySelectorAll('p, h2, h3, li, blockquote').forEach((n) => n.append(' '))
@@ -73,7 +74,7 @@ export function textWithoutSpoilers(html: string): string {
 export function autoExcerpt(html: string, max = 180) {
   const text = textWithoutSpoilers(html)
   if (text.length <= max) return text
-  return text.slice(0, max).replace(/\s+\S*$/, '') + '…'
+  return truncateAtWordBoundary(text, max) + '…'
 }
 
 export const hasText = (html: string) => textWithoutSpoilers(html).length > 0 || /data-spoiler/.test(html)

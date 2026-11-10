@@ -71,7 +71,7 @@ export function ReviewDetailPage() {
   const share = async () => {
     if (navigator.share) {
       try { await navigator.share({ title: `${view.book.title} · ${state.settings.siteName}`, text: view.review.excerpt, url }) } catch { /* user cancelled */ }
-    } else copy()
+    } else void copy()
   }
 
   return (

@@ -2,6 +2,8 @@ import { useEffect } from 'react'
 import { useLocation } from 'react-router'
 import { useContent } from '@/hooks/useContent'
 import { usePublishedReviews } from '@/hooks/useContent'
+import { textWithoutSpoilers } from '@/lib/html'
+import { trimTrailingSlashes } from '@/lib/text'
 
 declare global {
   interface Window {
@@ -20,7 +22,8 @@ export function SiteHead() {
   const description = review?.review.excerpt || metaDescription
   const title = review ? `${review.book.title} — reseña | Nia` : pathname === '/' ? 'Nia — reseñas literarias' : `${pathname.split('/').filter(Boolean).at(-1)?.split('-').join(' ') || 'Nia'} | Nia`
   const configuredSiteUrl = window.__APP_CONFIG__?.siteUrl
-  const siteUrl = (configuredSiteUrl && !configuredSiteUrl.startsWith('$') ? configuredSiteUrl : window.location.origin).replace(/\/+$/, '')
+  const rawSiteUrl = configuredSiteUrl && !configuredSiteUrl.startsWith('$') ? configuredSiteUrl : window.location.origin
+  const siteUrl = trimTrailingSlashes(rawSiteUrl)
   const canonical = `${siteUrl}${pathname}`
   const configuredClarityId = window.__APP_CONFIG__?.clarityId?.trim()
   const clarityId = configuredClarityId && !configuredClarityId.startsWith('$') ? configuredClarityId : ''
@@ -82,7 +85,7 @@ export function SiteHead() {
     let structured = document.head.querySelector<HTMLScriptElement>('#page-structured-data')
     if (review) {
       if (!structured) { structured = document.createElement('script'); structured.id = 'page-structured-data'; structured.type = 'application/ld+json'; document.head.appendChild(structured) }
-      const data = { '@context': 'https://schema.org', '@type': 'Review', name: title, reviewBody: review.review.content.replace(/<[^>]*>/g, ' ').slice(0, 5000), datePublished: review.review.publishedAt, url: canonical, author: { '@type': 'Person', name: state.settings.profileName || 'Nia' }, itemReviewed: { '@type': 'Book', name: review.book.title, author: { '@type': 'Person', name: review.book.author } }, reviewRating: { '@type': 'Rating', ratingValue: review.review.rating, bestRating: 5 } }
+      const data = { '@context': 'https://schema.org', '@type': 'Review', name: title, reviewBody: textWithoutSpoilers(review.review.content).slice(0, 5000), datePublished: review.review.publishedAt, url: canonical, author: { '@type': 'Person', name: state.settings.profileName || 'Nia' }, itemReviewed: { '@type': 'Book', name: review.book.title, author: { '@type': 'Person', name: review.book.author } }, reviewRating: { '@type': 'Rating', ratingValue: review.review.rating, bestRating: 5 } }
       structured.textContent = JSON.stringify(data).replace(/</g, '\\u003c')
     } else structured?.remove()
   }, [canonical, description, noIndex, review, state.settings.profileName, title])

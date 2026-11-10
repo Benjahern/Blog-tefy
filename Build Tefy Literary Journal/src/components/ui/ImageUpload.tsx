@@ -40,7 +40,7 @@ export function ImageUpload({ label, value, onChange, hint, aspect = 'aspect-[2/
       <div
         onDragOver={(e) => { e.preventDefault(); setDragging(true) }}
         onDragLeave={() => setDragging(false)}
-        onDrop={(e) => { e.preventDefault(); setDragging(false); handle(e.dataTransfer.files[0]) }}
+        onDrop={(e) => { e.preventDefault(); setDragging(false); void handle(e.dataTransfer.files[0]) }}
         className={`group relative overflow-hidden rounded-xl border border-dashed transition-colors duration-200 ${aspect} ${dragging ? 'border-mist bg-petrol/40' : 'border-line bg-night/50 hover:border-[#3d6273]'}`}
       >
         {value ? (
@@ -58,7 +58,7 @@ export function ImageUpload({ label, value, onChange, hint, aspect = 'aspect-[2/
           <span className="font-medium text-ink">{value ? 'Cambiar imagen' : 'Arrastra una imagen o haz clic'}</span>
           <span className="text-xs text-ink-3">JPG, PNG o WEBP · hasta {MAX_UPLOAD_MB} MB</span>
         </button>
-        <input ref={inputRef} type="file" accept="image/jpeg,image/png,image/webp,image/gif" className="sr-only" aria-labelledby={`${id}-label`} tabIndex={-1} onChange={(e) => { handle(e.target.files?.[0]); e.target.value = '' }} />
+        <input ref={inputRef} type="file" accept="image/jpeg,image/png,image/webp,image/gif" className="sr-only" aria-labelledby={`${id}-label`} tabIndex={-1} onChange={(e) => { void handle(e.target.files?.[0]); e.target.value = '' }} />
       </div>
       <div className="mt-2 flex items-start justify-between gap-3">
         <p id={`${id}-help`} className={`text-[13px] ${error ? 'text-danger' : 'text-ink-3'}`} role={error ? 'alert' : undefined}>{error ?? hint}</p>

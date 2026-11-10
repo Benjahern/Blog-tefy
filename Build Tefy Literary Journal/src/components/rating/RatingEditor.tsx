@@ -10,7 +10,7 @@ export function RatingEditor({ value, onChange }: { value: number; onChange: (v:
   useEffect(() => setText(formatRating(value)), [value])
 
   const commitText = (raw: string) => {
-    const n = parseFloat(raw.replace(',', '.'))
+    const n = Number.parseFloat(raw.replace(',', '.'))
     if (Number.isFinite(n)) onChange(clamp(round1(n), MIN_RATING, 5))
     else setText(formatRating(value))
   }
@@ -31,7 +31,7 @@ export function RatingEditor({ value, onChange }: { value: number; onChange: (v:
             value={text}
             onChange={(e) => {
               setText(e.target.value)
-              const n = parseFloat(e.target.value.replace(',', '.'))
+              const n = Number.parseFloat(e.target.value.replace(',', '.'))
               if (Number.isFinite(n) && n >= MIN_RATING && n <= 5) onChange(round1(n))
             }}
             onBlur={(e) => commitText(e.target.value)}

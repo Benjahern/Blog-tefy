@@ -66,12 +66,8 @@ export function ContentProvider({ children }: { children: ReactNode }) {
   const commit = useCallback((next: ContentState) => {
     ref.current = next
     setState(next)
-    try {
-      void contentRepository.save(next).catch(() => window.dispatchEvent(new CustomEvent('tefy:save-error')))
-      return true
-    } catch {
-      return false
-    }
+    void contentRepository.save(next).catch(() => window.dispatchEvent(new CustomEvent('tefy:save-error')))
+    return true
   }, [])
 
   const saveReview = useCallback<ContentApi['saveReview']>((input, status) => {

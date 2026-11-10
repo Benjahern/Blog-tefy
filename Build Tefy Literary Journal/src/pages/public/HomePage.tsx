@@ -2,6 +2,7 @@ import { Link } from 'react-router'
 import { ArrowRight, ArrowUpRight } from 'lucide-react'
 import { useContent, usePublishedReviews } from '@/hooks/useContent'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
+import { truncateAtWordBoundary } from '@/lib/text'
 import { defaultImages } from '@/data/images'
 import { ButtonLink } from '@/components/ui/Button'
 import { BotanicalDivider, Eyebrow, SectionHeading, EmptyState } from '@/components/ui/Decor'
@@ -100,7 +101,7 @@ export function HomePage() {
           <div>
             <Eyebrow>Sobre Nia</Eyebrow>
             <h2 id="sobre" className="mt-4 font-serif text-[clamp(2.2rem,4.5vw,3.4rem)] font-medium leading-[1.05] text-ink">{s.aboutTitle}</h2>
-            <p className="mt-6 max-w-[56ch] text-[17px] leading-[1.8] text-ink-2">{s.aboutText.length > 320 ? s.aboutText.slice(0, 320).replace(/\s+\S*$/, '') + '…' : s.aboutText}</p>
+            <p className="mt-6 max-w-[56ch] text-[17px] leading-[1.8] text-ink-2">{s.aboutText.length > 320 ? `${truncateAtWordBoundary(s.aboutText, 320)}…` : s.aboutText}</p>
             <ButtonLink to="/sobre-nia" variant="secondary" className="mt-8">Leer más sobre mí <ArrowUpRight size={17} /></ButtonLink>
           </div>
         </div>
