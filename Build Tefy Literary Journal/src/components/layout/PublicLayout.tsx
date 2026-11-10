@@ -7,6 +7,7 @@ import { Footer } from './Footer'
 import { IconButton } from '@/components/ui/Button'
 import { Dialog } from '@/components/ui/Dialog'
 import { NAV_LINKS } from './nav'
+import { FallingPetals } from './FallingPetals'
 
 
 export function PublicLayout() {
@@ -32,6 +33,7 @@ export function PublicLayout() {
 
   return (
     <div className="flex min-h-dvh flex-col overflow-x-clip">
+      <FallingPetals />
       <a href="#contenido" className="fixed left-3 top-3 z-[70] -translate-y-24 rounded-lg bg-mist px-4 py-2 text-sm font-medium text-night focus:translate-y-0">Saltar al contenido</a>
       <header className={`fixed inset-x-0 top-0 z-40 transition-[background-color,border-color,backdrop-filter] duration-300 ${scrolled ? 'border-b border-line/60 bg-night/80 backdrop-blur-xl' : 'border-b border-transparent bg-gradient-to-b from-night/70 to-transparent'}`}>
         <nav aria-label="Principal" className="mx-auto flex h-[72px] max-w-[1280px] items-center justify-between gap-6 px-5 sm:px-8">

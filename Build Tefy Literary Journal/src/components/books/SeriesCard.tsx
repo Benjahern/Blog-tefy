@@ -2,12 +2,15 @@ import { Link } from 'react-router'
 import type { ReviewView, Series } from '@/types'
 import { BookCover } from './BookCover'
 import { formatRating } from '@/lib/format'
+import { seriesKindLabel } from '@/types'
 
 export function SeriesCard({ series, views }: { series: Series; views: ReviewView[] }) {
   const sorted = [...views].sort((a, b) => (a.book.seriesOrder ?? 0) - (b.book.seriesOrder ?? 0))
   const avg = views.reduce((s, v) => s + v.review.rating, 0) / (views.length || 1)
   return (
     <Link to={`/colecciones/${series.slug}`} className="group flex h-full flex-col rounded-2xl border border-line bg-gradient-to-b from-surface/70 to-night-2/50 p-6 transition-[border-color,transform] duration-200 hover:-translate-y-[3px] hover:border-[#3d6475]">
+      {series.image && <img src={series.image} alt="" loading="lazy" decoding="async" className="-mx-6 -mt-6 mb-5 h-32 w-[calc(100%+3rem)] rounded-t-2xl object-cover" />}
+      <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-sage">{seriesKindLabel(series.kind)}</p>
       <div className="flex h-[150px] items-end pl-2" aria-hidden="true">
         {sorted.slice(0, 3).map((v, i) => (
           <div key={v.review.id} className="-ml-6 first:ml-0 transition-transform duration-300 group-hover:-translate-y-1" style={{ transform: `rotate(${(i - 1) * 4}deg)`, zIndex: 3 - i }}>

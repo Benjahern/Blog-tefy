@@ -46,6 +46,37 @@
   to { opacity: 1; transform: none; }
 }
 
+.falling-petals {
+  position: fixed;
+  z-index: 30;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.falling-petal {
+  position: absolute;
+  top: -2rem;
+  color: #c2d5bf;
+  font-size: clamp(1rem, 2vw, 1.65rem);
+  line-height: 1;
+  opacity: 0;
+  text-shadow: 0 1px 12px rgb(145 184 201 / 35%);
+  animation-name: fall-petal;
+  animation-timing-function: ease-in;
+  animation-fill-mode: forwards;
+}
+
+.falling-petal:nth-child(3n + 1) { color: #d6c5a9; }
+.falling-petal:nth-child(3n + 2) { color: #e2d5d0; }
+
+@keyframes fall-petal {
+  0% { opacity: 0; transform: translate3d(0, -2vh, 0) rotate(0deg); }
+  12% { opacity: 0.72; }
+  85% { opacity: 0.55; }
+  100% { opacity: 0; transform: translate3d(var(--petal-drift), 110vh, 0) rotate(500deg); }
+}
+
 @layer base {
   html {
     background: var(--background);
@@ -83,4 +114,5 @@
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
+  .falling-petals { display: none; }
 }

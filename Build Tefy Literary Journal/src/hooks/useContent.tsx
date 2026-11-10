@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
-import type { Book, ContentState, Genre, Review, ReviewDraftInput, ReviewStatus, Series, SiteSettings } from '@/types'
+import type { Book, ContentState, Genre, Review, ReviewDraftInput, ReviewStatus, Series, SeriesKind, SiteSettings } from '@/types'
 import { contentRepository } from '@/services/contentRepository'
 import { round1, slugify, uid } from '@/lib/format'
 import { autoExcerpt, sanitizeHtml } from '@/lib/html'
@@ -14,11 +14,11 @@ type ContentApi = {
   duplicateReview: (id: string) => SaveResult
   deleteReview: (id: string) => boolean
   setFeatured: (ids: string[]) => boolean
-  addGenre: (name: string, description?: string) => string | undefined
+  addGenre: (name: string, description?: string, image?: string) => string | undefined
   updateGenre: (id: string, patch: Partial<Genre>) => boolean
   deleteGenre: (id: string) => boolean
   moveGenre: (id: string, dir: -1 | 1) => boolean
-  addSeries: (name: string, description?: string) => string | undefined
+  addSeries: (name: string, description?: string, kind?: SeriesKind, image?: string) => string | undefined
   updateSeries: (id: string, patch: Partial<Series>) => boolean
   deleteSeries: (id: string) => boolean
   moveSeries: (id: string, dir: -1 | 1) => boolean
@@ -169,11 +169,11 @@ export function ContentProvider({ children }: { children: ReactNode }) {
     return commit({ ...cur, reviews: cur.reviews.map((r) => ({ ...r, featured: r.status === 'published' && ids.includes(r.id) })) })
   }, [commit])
 
-  const addGenre = useCallback((name: string, description?: string) => {
+  const addGenre = useCallback((name: string, description?: string, image?: string) => {
     const cur = ref.current
     const id = uid('g')
     const slug = uniqueSlug(name, cur.genres.map((g) => g.slug))
-    return commit({ ...cur, genres: [...cur.genres, { id, name: name.trim(), slug, description }] }) ? id : undefined
+    return commit({ ...cur, genres: [...cur.genres, { id, name: name.trim(), slug, description, image }] }) ? id : undefined
   }, [commit])
   const updateGenre = useCallback((id: string, patch: Partial<Genre>) => {
     const cur = ref.current
@@ -185,15 +185,18 @@ export function ContentProvider({ children }: { children: ReactNode }) {
   }, [commit])
   const moveGenre = useCallback((id: string, dir: -1 | 1) => commit({ ...ref.current, genres: move(ref.current.genres, id, dir) }), [commit])
 
-  const addSeries = useCallback((name: string, description?: string) => {
+  const addSeries = useCallback((name: string, description?: string, kind: SeriesKind = 'saga', image?: string) => {
     const cur = ref.current
     const id = uid('s')
     const slug = uniqueSlug(name, cur.series.map((s) => s.slug))
-    return commit({ ...cur, series: [...cur.series, { id, name: name.trim(), slug, description }] }) ? id : undefined
+    return commit({ ...cur, series: [...cur.series, { id, name: name.trim(), slug, description, kind, image }] }) ? id : undefined
   }, [commit])
   const updateSeries = useCallback((id: string, patch: Partial<Series>) => {
     const cur = ref.current
-    return commit({ ...cur, series: cur.series.map((s) => (s.id === id ? { ...s, ...patch } : s)) })
+    const books = patch.kind === 'standalone'
+      ? cur.books.map((book) => book.seriesId === id ? { ...book, seriesOrder: undefined } : book)
+      : cur.books
+    return commit({ ...cur, books, series: cur.series.map((s) => (s.id === id ? { ...s, ...patch } : s)) })
   }, [commit])
   const deleteSeries = useCallback((id: string) => {
     const cur = ref.current

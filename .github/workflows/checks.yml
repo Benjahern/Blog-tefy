@@ -24,8 +24,14 @@ jobs:
           cache: pnpm
           cache-dependency-path: Build Tefy Literary Journal/pnpm-lock.yaml
       - run: pnpm install --frozen-lockfile
-      - name: Test admin session response validation
-        run: node --test tests/admin-session.test.mjs
+      - name: Test frontend utilities and generate LCOV coverage
+        run: pnpm exec c8 --all --include='src/lib/**/*.mjs' --exclude='tests/**' --reports-dir=coverage --reporter=lcov --reporter=text node --test tests/*.test.mjs
+      - name: Make LCOV paths relative to the repository root
+        run: sed -i 's#SF:src/#SF:Build Tefy Literary Journal/src/#' coverage/lcov.info
+      - uses: actions/upload-artifact@v4
+        with:
+          name: frontend-coverage
+          path: Build Tefy Literary Journal/coverage/lcov.info
       - name: Type-check frontend
         run: pnpm exec tsc --noEmit
       - run: pnpm build
@@ -53,26 +59,40 @@ jobs:
         with:
           go-version-file: backend/go.mod
           cache-dependency-path: backend/go.sum
-      - name: Test, vet, and build backend
+      - name: Test backend and generate coverage
         working-directory: backend
-        run: go test ./... && go vet ./... && go build ./...
+        run: mkdir -p ../coverage && go test -coverprofile=../coverage/backend.out ./...
+      - name: Upload Go coverage
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-coverage
+          path: coverage/backend.out
+      - name: Vet and build backend
+        working-directory: backend
+        run: go vet ./... && go build ./...
 
   sonarqube:
     name: SonarQube analysis
+    needs: [frontend, backend]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: frontend-coverage
+          path: Build Tefy Literary Journal/coverage
+      - uses: actions/download-artifact@v4
+        with:
+          name: backend-coverage
+          path: coverage
       - name: Analyze with SonarQube
         if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
-        uses: SonarSource/sonarqube-scan-action@v5
+        uses: SonarSource/sonarqube-scan-action@v6
         env:
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         with:
-          args: >-
-            -Dsonar.projectKey=blog-tefy
-            -Dsonar.sources=.
-            -Dsonar.exclusions=**/node_modules/**,**/dist/**,**/coverage/**,**/vendor/**,**/.git/**
+          args: -Dsonar.projectKey=blog-tefy
 
   compose:
     name: Compose configuration
