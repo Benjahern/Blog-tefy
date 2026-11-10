@@ -45,8 +45,32 @@ status=$(curl -sS --max-time 5 -o "$body" -b "$cookies" -w '%{http_code}' http:/
 [ "$status" = "200" ] || { echo "Authenticated session should return 200 through frontend proxy (got $status)"; exit 1; }
 grep -q '"authenticated":true' "$body"
 
+# Newly published reviews must immediately return crawlable, per-review HTML.
+content=$(cat <<'JSON'
+{"version":1,"books":[{"id":"seo-book","title":"Libro SEO de prueba","author":"Autora de prueba","coverUrl":"/cover.jpg","genreIds":[]}],"reviews":[{"id":"seo-review","bookId":"seo-book","slug":"seo-review-fixture","status":"published","title":"Texto único de la reseña","excerpt":"Descripción indexable de prueba.","content":"<p>Contenido visible para buscadores y lectores.</p><script>alert(1)</script>","rating":4.5,"createdAt":"2026-01-01T00:00:00Z","updatedAt":"2026-01-02T00:00:00Z","publishedAt":"2026-01-02T00:00:00Z"},{"id":"draft-review","bookId":"seo-book","slug":"seo-draft-fixture","status":"draft","title":"Borrador privado","excerpt":"No debe indexarse.","content":"<p>Contenido privado.</p>","rating":4,"createdAt":"2026-01-01T00:00:00Z","updatedAt":"2026-01-02T00:00:00Z"}],"genres":[],"series":[],"settings":{"siteName":"Nia","profileName":"Nia"}}
+JSON
+)
+status=$(curl -sS --max-time 10 -o "$body" -w '%{http_code}' -b "$cookies" -H 'Content-Type: application/json' -H "X-CSRF-Token: $csrf" -X PUT --data "$content" http://127.0.0.1:$PROD_FRONTEND_PORT/api/v1/admin/content)
+[ "$status" = "204" ] || { echo "Saving public SEO fixture should return 204 (got $status)"; cat "$body"; exit 1; }
+
+status=$(curl -sS --max-time 10 -o "$body" -D "$headers" -w '%{http_code}' http://127.0.0.1:$PROD_FRONTEND_PORT/resenas/seo-review-fixture)
+[ "$status" = "200" ] || { echo "Published review should return server-rendered HTML (got $status)"; cat "$body"; exit 1; }
+grep -q 'Libro SEO de prueba — reseña | Nia' "$body"
+grep -q 'Descripción indexable de prueba.' "$body"
+grep -q 'Contenido visible para buscadores y lectores.' "$body"
+grep -q 'application/ld+json' "$body"
+grep -q 'src="/assets/app.js"' "$body"
+! grep -q 'alert(1)' "$body"
+
+status=$(curl -sS --max-time 10 -o "$body" -w '%{http_code}' http://127.0.0.1:$PROD_FRONTEND_PORT/resenas/seo-draft-fixture)
+[ "$status" = "404" ] || { echo "Draft review must not be publicly rendered (got $status)"; exit 1; }
+
 status=$(curl -sS --max-time 5 -o "$body" -D "$headers" -w '%{http_code}' http://127.0.0.1:$PROD_FRONTEND_PORT/robots.txt)
 [ "$status" = "200" ] || { echo "robots.txt proxy should return 200 (got $status)"; exit 1; }
 grep -q "Sitemap: $SITE_URL/api/v1/public/sitemap.xml" "$body"
+status=$(curl -sS --max-time 5 -o "$body" -w '%{http_code}' http://127.0.0.1:$PROD_FRONTEND_PORT/api/v1/public/sitemap.xml)
+[ "$status" = "200" ] || { echo "sitemap should return 200 (got $status)"; exit 1; }
+grep -q "$SITE_URL/resenas/seo-review-fixture" "$body"
+! grep -q 'seo-draft-fixture' "$body"
 
-echo 'Frontend-to-backend proxy, auth, and runtime env integration passed.'
+echo 'Frontend-to-backend proxy, auth, runtime config, and per-review SEO integration passed.'

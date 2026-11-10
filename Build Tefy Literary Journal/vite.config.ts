@@ -17,6 +17,12 @@ export default defineConfig(({ mode }) => {
     build: {
       sourcemap: emitSourcemaps ? 'inline' : false,
       minify: !emitSourcemaps,
+      rollupOptions: {
+        output: {
+          entryFileNames: (chunk) => chunk.name === 'index' ? 'assets/app.js' : 'assets/[name]-[hash].js',
+          assetFileNames: (asset) => asset.name === 'index.css' ? 'assets/app.css' : 'assets/[name]-[hash][extname]',
+        },
+      },
     },
     plugins: [
 react(),
